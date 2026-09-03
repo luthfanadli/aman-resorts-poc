@@ -54,7 +54,7 @@ function blankDraft(): AssetDraft {
     condition: 'Good',
     status: 'Active',
     usefulLife: null,
-    lastMaintenanceDate: '',
+    lastMaintenanceDate: null,
     maintenanceRoutine: null,
     warrantyExpiry: '',
     responsibleUnit: '',
@@ -282,8 +282,8 @@ function submit() {
                 <input v-model="form.lastMaintenanceDate" type="date" />
               </label>
               <label class="field">
-                <span>Maintanance Routine (Month)</span>
-                <input v-model.number="form.maintananceRoutine" type="number" min="0" placeholder="1" />
+                <span>Maintenance Routine (Months)</span>
+                <input v-model.number="form.maintenanceRoutine" type="number" min="0" placeholder="1" />
               </label>
               <label class="field">
                 <span>Useful Life (Years)</span>

@@ -16,7 +16,7 @@ import {
   OPENSTREETMAP_TILES,
 } from '../../lib/map/constants'
 import type { BasemapId } from '../../lib/map/constants'
-import { getCollectionBounds, getFeatureBounds } from '../../lib/map/geometry'
+import { getBuildingFeatureBounds, getCollectionBounds, getFeatureBounds } from '../../lib/map/geometry'
 import { formatArea, parcelLabel } from '../../lib/parcel'
 import type {
   BuildingCollection,
@@ -45,7 +45,7 @@ const emit = defineEmits<{
   clearSelection: []
   error: [message: string]
   openPanel: []
-  ready: [featureCount: number]
+  ready: []
   selectBuilding: [buildingId: number]
   select: [parcelId: number]
   stats: [stats: MapRenderStats]
@@ -247,16 +247,28 @@ function syncSelection() {
 }
 
 function updateRenderStats() {
-  if (!map || !sourceReady.value || !map.getLayer(MAP_LAYER.parcelFill)) return
-  const renderedIds = new Set(
+  if (
+    !map
+    || !sourceReady.value
+    || !map.getLayer(MAP_LAYER.parcelFill)
+    || !map.getLayer(MAP_LAYER.buildingFill)
+  ) return
+
+  const renderedParcelIds = new Set(
     map
       .queryRenderedFeatures({ layers: [MAP_LAYER.parcelFill] })
       .map((feature) => Number(feature.properties.OBJECTID))
       .filter(Number.isFinite),
   )
+  const renderedBuildingIds = new Set(
+    map
+      .queryRenderedFeatures({ layers: [MAP_LAYER.buildingFill] })
+      .map((feature) => Number(feature.properties.__mapFeatureId))
+      .filter(Number.isFinite),
+  )
   emit('stats', {
-    sourceFeatures: props.collection.features.length,
-    renderedFeatures: renderedIds.size,
+    renderedBuildings: renderedBuildingIds.size,
+    renderedFeatures: renderedParcelIds.size,
   })
 }
 
@@ -265,7 +277,7 @@ function markSourceReady() {
   readyEmitted = true
   sourceReady.value = true
   if (readyTimer) clearTimeout(readyTimer)
-  emit('ready', props.collection.features.length)
+  emit('ready')
   fitAll()
   requestAnimationFrame(updateRenderStats)
 }
@@ -299,24 +311,21 @@ function formatBuildingArea(value: unknown) {
     : 'Luas tidak tersedia'
 }
 
-function buildingLabel(feature: BuildingCollection['features'][number]) {
-  const code = feature.properties.full_plus
-  return typeof code === 'string' && code ? `Bangunan ${code}` : 'Bangunan'
+function buildingLabel(buildingId: number) {
+  return `Bangunan #${buildingId + 1}`
 }
 
-function createBuildingPopupContent(feature: BuildingCollection['features'][number]) {
+function createBuildingPopupContent(
+  feature: BuildingCollection['features'][number],
+  buildingId: number,
+) {
   const content = document.createElement('div')
   content.className = 'parcel-popup building-popup'
   const title = document.createElement('strong')
-  title.textContent = buildingLabel(feature)
+  title.textContent = buildingLabel(buildingId)
   const area = document.createElement('span')
   area.textContent = `Luas: ${formatBuildingArea(feature.properties.area_in_me)}`
-  const confidence = document.createElement('span')
-  const value = Number(feature.properties.confidence)
-  confidence.textContent = Number.isFinite(value)
-    ? `Confidence: ${Math.round(value * 100)}%`
-    : 'Confidence tidak tersedia'
-  content.append(title, area, confidence)
+  content.append(title, area)
   return content
 }
 
@@ -349,12 +358,13 @@ function showPopup(feature: ParcelFeature, coordinate: [number, number]) {
 function showBuildingPopup(
   feature: BuildingCollection['features'][number],
   coordinate: [number, number],
+  buildingId: number,
 ) {
   if (!map) return
   removePopup()
   const nextPopup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
     .setLngLat(coordinate)
-    .setDOMContent(createBuildingPopupContent(feature))
+    .setDOMContent(createBuildingPopupContent(feature, buildingId))
     .addTo(map)
   activatePopup(nextPopup)
 }
@@ -366,6 +376,15 @@ function focusParcel(parcelId: number) {
   const bounds = getFeatureBounds(feature)
   map.fitBounds(bounds, { padding: 90, duration: 650, maxZoom: 19 })
   showPopup(feature, bounds.getCenter().toArray() as [number, number])
+}
+
+function focusBuilding(buildingId: number) {
+  if (!map) return
+  const feature = props.buildingCollection.features[buildingId]
+  if (!feature) return
+  const bounds = getBuildingFeatureBounds(feature)
+  map.fitBounds(bounds, { padding: 90, duration: 650, maxZoom: 19 })
+  showBuildingPopup(feature, bounds.getCenter().toArray() as [number, number], buildingId)
 }
 
 function handleMapClick(event: maplibregl.MapLayerMouseEvent) {
@@ -381,7 +400,7 @@ function handleBuildingClick(event: maplibregl.MapLayerMouseEvent) {
   const feature = props.buildingCollection.features[id]
   if (!feature) return
   emit('selectBuilding', id)
-  showBuildingPopup(feature, event.lngLat.toArray() as [number, number])
+  showBuildingPopup(feature, event.lngLat.toArray() as [number, number], id)
 }
 
 function handleMouseMove(event: maplibregl.MapLayerMouseEvent) {
@@ -630,7 +649,7 @@ watch(() => props.theme, syncTheme)
 watch(() => props.selectedBuildingId, syncSelection)
 watch(() => props.selectedParcelId, syncSelection)
 
-defineExpose<ParcelMapApi>({ fitAll, focusParcel })
+defineExpose<ParcelMapApi>({ fitAll, focusBuilding, focusParcel })
 
 onMounted(initializeMap)
 onBeforeUnmount(() => {

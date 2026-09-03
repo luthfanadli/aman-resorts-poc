@@ -36,8 +36,8 @@ export interface Asset {
   condition: AssetCondition
   status: AssetStatus
   usefulLife: number | null     // years
-  maintenanceRoutine: number | null     // month
-  lastMaintenanceDate: string   // ISO date
+  maintenanceRoutine: number | null     // months; null when not scheduled
+  lastMaintenanceDate: string | null    // ISO date; null when not recorded
   warrantyExpiry: string        // ISO date
 
   // Management

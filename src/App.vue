@@ -35,7 +35,10 @@ const theme = ref<ThemeMode>(savedTheme === 'light' ? 'light' : 'dark')
 const mobilePanelOpen = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
-const renderStats = ref<MapRenderStats>({ sourceFeatures: 0, renderedFeatures: 0 })
+const renderStats = ref<MapRenderStats>({
+  renderedBuildings: 0,
+  renderedFeatures: 0,
+})
 const buildingModalOpen = ref(false)
 
 const selectedParcel = computed(() =>
@@ -62,9 +65,10 @@ function selectParcel(parcelId: number, focus = false) {
   if (window.innerWidth <= 760) mobilePanelOpen.value = false
 }
 
-function selectBuilding(buildingId: number) {
+function selectBuilding(buildingId: number, focus = false) {
   selectedParcelId.value = null
   selectedBuildingId.value = buildingId
+  if (focus) mapRef.value?.focusBuilding(buildingId)
   if (window.innerWidth <= 760) mobilePanelOpen.value = false
 }
 
@@ -86,10 +90,9 @@ function resetView() {
   mapRef.value?.fitAll()
 }
 
-function handleMapReady(featureCount: number) {
+function handleMapReady() {
   mapReady.value = true
   mapError.value = ''
-  renderStats.value = { ...renderStats.value, sourceFeatures: featureCount }
 }
 </script>
 
@@ -97,6 +100,7 @@ function handleMapReady(featureCount: number) {
   <main class="map-app">
     <MapSidebar
       :building-count="buildingCollection?.features.length ?? 0"
+      :building-collection="buildingCollection"
       :building-fill-opacity="buildingFillOpacity"
       :building-stroke-opacity="buildingStrokeOpacity"
       :buildings-visible="buildingsVisible"
@@ -110,11 +114,13 @@ function handleMapReady(featureCount: number) {
       :parcel-stroke-opacity="parcelStrokeOpacity"
       :render-stats="renderStats"
       :selected-building="selectedBuilding"
+      :selected-building-id="selectedBuildingId"
       :selected-parcel="selectedParcel"
       :theme="theme"
       @close="mobilePanelOpen = false"
       @reset="resetView"
       @select="selectParcel($event, true)"
+      @select-building="selectBuilding($event, true)"
       @toggle-buildings="buildingsVisible = !buildingsVisible"
       @toggle-parcels="parcelsVisible = !parcelsVisible"
       @manage-rooms="openBuildingModal"

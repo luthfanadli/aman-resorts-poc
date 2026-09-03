@@ -6,6 +6,7 @@ import ParcelSearch from './ParcelSearch.vue'
 import ParcelSummary from './ParcelSummary.vue'
 import amanLogoUrl from '../../assets/aman-logo.svg'
 import type {
+  BuildingCollection,
   BuildingFeature,
   MapRenderStats,
   ParcelCollection,
@@ -15,6 +16,7 @@ import type { ThemeMode } from '../../types/theme'
 
 defineProps<{
   buildingCount: number
+  buildingCollection: BuildingCollection | null
   buildingFillOpacity: number
   buildingStrokeOpacity: number
   buildingsVisible: boolean
@@ -28,6 +30,7 @@ defineProps<{
   parcelStrokeOpacity: number
   renderStats: MapRenderStats
   selectedBuilding: BuildingFeature | null
+  selectedBuildingId: number | null
   selectedParcel: ParcelFeature | null
   theme: ThemeMode
 }>()
@@ -36,6 +39,7 @@ const emit = defineEmits<{
   close: []
   reset: []
   select: [parcelId: number]
+  selectBuilding: [buildingId: number]
   toggleBuildings: []
   toggleParcels: []
   'manage-rooms': []
@@ -84,9 +88,11 @@ const emit = defineEmits<{
 
     <div class="sidebar-content">
       <ParcelSearch
+        :building-features="buildingCollection?.features ?? []"
         :features="collection?.features ?? []"
-        :disabled="isLoading || !collection"
-        @select="emit('select', $event)"
+        :disabled="isLoading || !collection || !buildingCollection"
+        @select-building="emit('selectBuilding', $event)"
+        @select-parcel="emit('select', $event)"
       />
       <ParcelSummary :features="collection?.features ?? []" />
       <LayerControls
@@ -112,19 +118,21 @@ const emit = defineEmits<{
       <BuildingDetail
         v-else-if="selectedBuilding"
         :building="selectedBuilding"
+        :building-id="selectedBuildingId"
         @close="emit('reset')"
         @manage-rooms="emit('manage-rooms')"
       />
 
       <div class="source-status">
-        <span :class="{ error: Boolean(error) }"></span>
+        <span v-if="error" class="status-indicator error"></span>
         <p v-if="error">{{ error }}</p>
         <p v-else-if="isLoading">Membaca data persil…</p>
         <p v-else-if="!mapReady">
-          {{ collection?.features.length ?? 0 }} persil dan {{ buildingCount }} bangunan terbaca
+          {{ buildingCount }} bangunan terbaca
         </p>
-        <p v-else>
-          {{ renderStats.sourceFeatures }} persil • {{ buildingCount }} bangunan • {{ renderStats.renderedFeatures }} persil terlihat
+        <p v-else class="visibility-stats">
+          <span class="visibility-stat parcel-visible"><i aria-hidden="true"></i>{{ renderStats.renderedFeatures }} persil terlihat</span>
+          <span class="visibility-stat building-visible"><i aria-hidden="true"></i>{{ renderStats.renderedBuildings }} bangunan terlihat</span>
         </p>
       </div>
     </div>
@@ -146,9 +154,13 @@ h1 { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.4; }
 .theme-control svg { width: 13px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .sidebar-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 .source-status { display: flex; align-items: flex-start; gap: 8px; padding: 18px 20px; }
-.source-status > span { width: 6px; height: 6px; flex: 0 0 auto; margin-top: 3px; background: var(--success); border-radius: 50%; }
-.source-status > span.error { background: var(--error); }
+.status-indicator { width: 6px; height: 6px; flex: 0 0 auto; margin-top: 3px; background: var(--error); border-radius: 50%; }
 .source-status p { color: var(--muted-faint); font-size: 9px; line-height: 1.5; }
+.visibility-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.visibility-stat { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.visibility-stat i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; }
+.parcel-visible i { background: var(--parcel-fill); }
+.building-visible i { background: var(--building-fill); }
 .panel-close { display: none; }
 
 @media (max-width: 760px) {

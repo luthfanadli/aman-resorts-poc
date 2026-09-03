@@ -15,10 +15,22 @@ function now(): string {
   return new Date().toISOString()
 }
 
+function normalizeAsset(asset: Asset): Asset {
+  return {
+    ...asset,
+    maintenanceRoutine: typeof asset.maintenanceRoutine === 'number'
+      ? asset.maintenanceRoutine
+      : null,
+    lastMaintenanceDate: typeof asset.lastMaintenanceDate === 'string' && asset.lastMaintenanceDate
+      ? asset.lastMaintenanceDate
+      : null,
+  }
+}
+
 function loadFromStorage(): Asset[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as Asset[]
+    if (raw) return (JSON.parse(raw) as Asset[]).map(normalizeAsset)
   } catch {
     // ignore
   }
@@ -53,6 +65,8 @@ function seedAssets(): Asset[] {
       condition: 'Good',
       status: 'Active',
       usefulLife: 8,
+      maintenanceRoutine: null,
+      lastMaintenanceDate: null,
       warrantyExpiry: '2027-03-12',
       responsibleUnit: 'Administration',
       pic: 'Wayan Susila',
@@ -88,6 +102,8 @@ function seedAssets(): Asset[] {
       condition: 'Excellent',
       status: 'Active',
       usefulLife: 5,
+      maintenanceRoutine: null,
+      lastMaintenanceDate: null,
       warrantyExpiry: '2027-01-20',
       responsibleUnit: 'IT Department',
       pic: 'Made Artha',
@@ -123,6 +139,8 @@ function seedAssets(): Asset[] {
       condition: 'Good',
       status: 'Active',
       usefulLife: 5,
+      maintenanceRoutine: null,
+      lastMaintenanceDate: null,
       warrantyExpiry: '2028-06-01',
       responsibleUnit: 'IT Department',
       pic: 'Made Artha',
@@ -158,6 +176,8 @@ function seedAssets(): Asset[] {
       condition: 'Good',
       status: 'Active',
       usefulLife: 10,
+      maintenanceRoutine: null,
+      lastMaintenanceDate: null,
       warrantyExpiry: '2026-05-15',
       responsibleUnit: 'F&B Department',
       pic: 'Nyoman Darma',

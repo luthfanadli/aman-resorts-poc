@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { BuildingFeature } from '../../types/parcel'
 
-const props = defineProps<{ building: BuildingFeature }>()
+const props = defineProps<{
+  building: BuildingFeature
+  buildingId: number | null
+}>()
 const emit = defineEmits<{ close: []; 'manage-rooms': [] }>()
+
+const buildingNumber = computed(() =>
+  props.buildingId === null ? '—' : props.buildingId + 1,
+)
 
 function numberValue(key: string, digits = 1) {
   const value = Number(props.building.properties[key])
@@ -32,7 +40,7 @@ const locationCode = typeof props.building.properties.full_plus === 'string'
       <h2>Detail bangunan</h2>
       <button type="button" @click="emit('close')">Tutup</button>
     </div>
-    <strong class="building-title">{{ locationCode === '—' ? 'Bangunan' : `Bangunan ${locationCode}` }}</strong>
+    <strong class="building-title">Bangunan #{{ buildingNumber }}</strong>
     <dl>
       <div><dt>Luas terdeteksi</dt><dd>{{ numberValue('area_in_me') }} m²</dd></div>
       <div><dt>Confidence</dt><dd>{{ confidenceValue() }}</dd></div>

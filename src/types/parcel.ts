@@ -47,11 +47,12 @@ export interface BuildingCollection {
 }
 
 export interface MapRenderStats {
-  sourceFeatures: number
+  renderedBuildings: number
   renderedFeatures: number
 }
 
 export interface ParcelMapApi {
   fitAll: () => void
+  focusBuilding: (buildingId: number) => void
   focusParcel: (parcelId: number) => void
 }
