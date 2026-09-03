@@ -67,9 +67,13 @@ function assetCountForRoom(roomId: string) {
 }
 
 const statusColor: Record<string, string> = {
-  Active: '#6baa6e',
-  Inactive: '#777d6e',
-  Renovation: '#d8be76',
+  Active: 'var(--status-good)',
+  Inactive: 'var(--muted-faint)',
+  Renovation: 'var(--accent)',
+}
+
+function statusBackground(status: string) {
+  return `color-mix(in srgb, ${statusColor[status]} 14%, transparent)`
 }
 </script>
 
@@ -117,7 +121,7 @@ const statusColor: Record<string, string> = {
         <span class="chip-label">{{ status }}</span>
       </div>
       <div class="summary-chip">
-        <span class="chip-value" style="color: #e5baa4">{{ allBuildingAssets.length }}</span>
+        <span class="chip-value asset-total">{{ allBuildingAssets.length }}</span>
         <span class="chip-label">Total Assets</span>
       </div>
     </div>
@@ -147,7 +151,7 @@ const statusColor: Record<string, string> = {
               <span class="room-code">{{ room.code }}</span>
               <h4 class="room-name">{{ room.name }}</h4>
             </div>
-            <span class="status-badge" :style="{ color: statusColor[room.status], background: statusColor[room.status] + '22' }">
+            <span class="status-badge" :style="{ color: statusColor[room.status], background: statusBackground(room.status) }">
               {{ room.status }}
             </span>
           </div>
@@ -223,116 +227,117 @@ const statusColor: Record<string, string> = {
 
 .list-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 24px; border-bottom: 1px solid #2e3329; flex-shrink: 0;
+  padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .header-left { display: flex; align-items: center; gap: 8px; }
-.header-left h3 { margin: 0; font-size: 13px; font-weight: 700; color: #ecebdc; }
+.header-left h3 { margin: 0; font-size: 13px; font-weight: 700; color: var(--text); }
 .count-badge {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 20px; height: 20px; padding: 0 6px;
-  background: #252a20; border: 1px solid #3a4033; border-radius: 10px;
-  font-size: 10px; font-weight: 700; color: #9fa492;
+  background: var(--surface-hover); border: 1px solid var(--border-strong); border-radius: 10px;
+  font-size: 10px; font-weight: 700; color: var(--muted);
 }
 
 .btn-add {
   display: flex; align-items: center; gap: 6px;
-  padding: 8px 14px; background: #d8be76; color: #10120e;
+  padding: 8px 14px; background: var(--accent); color: var(--accent-text);
   border: 0; border-radius: 7px; font-size: 11px; font-weight: 700;
   cursor: pointer; transition: all 150ms;
 }
-.btn-add:hover { background: #e0cc8e; }
+.btn-add:hover { background: var(--accent-light); }
 .btn-add svg { width: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 2.2; }
 
 .search-bar {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 20px; border-bottom: 1px solid #252a20; flex-shrink: 0;
+  padding: 10px 20px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
 }
-.search-icon { width: 14px; flex-shrink: 0; fill: none; stroke: #777d6e; stroke-linecap: round; stroke-width: 1.8; }
+.search-icon { width: 14px; flex-shrink: 0; fill: none; stroke: var(--muted-faint); stroke-linecap: round; stroke-width: 1.8; }
 .search-input {
   flex: 1; background: transparent; border: 0; outline: none;
-  color: #ecebdc; font-size: 12px;
+  color: var(--text); font-size: 12px;
 }
-.search-input::placeholder { color: #4a5041; }
+.search-input::placeholder { color: var(--muted-faint); }
 
 .summary-bar {
-  display: flex; gap: 1px; background: #252a20;
-  border-bottom: 1px solid #2e3329; flex-shrink: 0;
+  display: flex; gap: 1px; background: var(--border-subtle);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .summary-chip {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  padding: 8px; background: #1a1e17;
+  padding: 8px; background: var(--surface-raised);
 }
-.chip-value { font-size: 18px; font-weight: 700; color: #ecebdc; line-height: 1; }
-.chip-label { font-size: 8px; color: #777d6e; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+.chip-value { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
+.asset-total { color: var(--building-accent); }
+.chip-label { font-size: 8px; color: var(--muted-faint); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .empty-state {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 10px; padding: 48px; color: #777d6e;
+  justify-content: center; gap: 10px; padding: 48px; color: var(--muted-faint);
 }
 .empty-state svg { width: 40px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.2; opacity: 0.5; }
 .empty-state p { margin: 0; font-size: 13px; }
 .btn-add-inline {
-  padding: 8px 18px; background: transparent; color: #d8be76;
-  border: 1px solid #d8be76; border-radius: 7px; font-size: 11px;
+  padding: 8px 18px; background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 7px; font-size: 11px;
   font-weight: 600; cursor: pointer; transition: all 150ms; margin-top: 4px;
 }
-.btn-add-inline:hover { background: rgba(216,190,118,0.1); }
+.btn-add-inline:hover { background: var(--accent-surface); }
 
 .room-grid {
   flex: 1; overflow-y: auto; padding: 16px; display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px; align-content: start;
-  scrollbar-width: thin; scrollbar-color: #434936 transparent;
+  scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .room-card {
-  background: #1e2219;
-  border: 1px solid #2e3329;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: border-color 150ms, transform 150ms;
 }
-.room-card:hover { border-color: #3a4033; transform: translateY(-1px); }
+.room-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 .card-status-bar { height: 3px; flex-shrink: 0; }
 .card-body { padding: 14px 14px 10px; flex: 1; }
 .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .card-title-group { flex: 1; min-width: 0; }
-.room-code { font-size: 9px; font-weight: 700; color: #777d6e; letter-spacing: 0.06em; text-transform: uppercase; }
-.room-name { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: #ecebdc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.room-code { font-size: 9px; font-weight: 700; color: var(--muted-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+.room-name { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-badge { flex-shrink: 0; padding: 2px 7px; border-radius: 10px; font-size: 8px; font-weight: 700; white-space: nowrap; }
 
 .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .meta-item {
   display: flex; align-items: center; gap: 4px;
-  font-size: 10px; color: #9fa492; background: #252a20;
-  border: 1px solid #2e3329; border-radius: 4px; padding: 3px 6px;
+  font-size: 10px; color: var(--muted); background: var(--surface-hover);
+  border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px;
 }
 .meta-item svg { width: 11px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 
 .card-unit {
   display: flex; align-items: center; gap: 5px;
-  font-size: 10px; color: #777d6e; margin-top: 4px;
+  font-size: 10px; color: var(--muted-faint); margin-top: 4px;
 }
 .card-unit svg { width: 11px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 
 .card-footer {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 14px; border-top: 1px solid #252a20; background: #191d16;
+  padding: 8px 14px; border-top: 1px solid var(--border-subtle); background: var(--surface-raised);
 }
 .asset-btn {
   display: flex; align-items: center; gap: 5px;
   padding: 5px 10px; background: transparent;
-  border: 1px solid #3a4033; border-radius: 6px; color: #9fa492;
+  border: 1px solid var(--border-strong); border-radius: 6px; color: var(--muted);
   font-size: 10px; font-weight: 600; cursor: pointer; transition: all 150ms;
 }
-.asset-btn:hover { background: #252a20; color: #d8be76; border-color: #d8be76; }
+.asset-btn:hover { background: var(--surface-hover); color: var(--accent); border-color: var(--accent); }
 .asset-btn svg { width: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .asset-count {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 16px; height: 16px; padding: 0 4px;
-  background: #3a4033; border-radius: 8px; font-size: 9px; font-weight: 700;
+  background: var(--border-strong); border-radius: 8px; font-size: 9px; font-weight: 700;
 }
 .card-actions { display: flex; gap: 4px; }
 .icon-btn {
@@ -341,35 +346,35 @@ const statusColor: Record<string, string> = {
   cursor: pointer; transition: all 120ms;
 }
 .icon-btn svg { width: 13px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-.icon-btn.edit { color: #777d6e; }
-.icon-btn.edit:hover { background: #252a20; color: #d8be76; border-color: #3a4033; }
-.icon-btn.delete { color: #777d6e; }
-.icon-btn.delete:hover { background: #2a1a1a; color: #c96a56; border-color: #5a2a2a; }
+.icon-btn.edit { color: var(--muted-faint); }
+.icon-btn.edit:hover { background: var(--surface-hover); color: var(--accent); border-color: var(--border-strong); }
+.icon-btn.delete { color: var(--muted-faint); }
+.icon-btn.delete:hover { background: var(--error-surface); color: var(--error); border-color: var(--error-border); }
 
 /* Confirm dialog */
 .confirm-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  position: fixed; inset: 0; background: var(--backdrop);
   backdrop-filter: blur(2px); display: flex; align-items: center;
   justify-content: center; z-index: 300;
 }
 .confirm-box {
-  background: #1a1e17; border: 1px solid #3a4033; border-radius: 10px;
+  background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 10px;
   padding: 24px; max-width: 320px; text-align: center;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  box-shadow: 0 16px 48px var(--shadow-strong);
 }
-.confirm-box h4 { margin: 0 0 8px; color: #ecebdc; font-size: 14px; }
-.confirm-box p { margin: 0 0 18px; color: #9fa492; font-size: 11px; line-height: 1.5; }
+.confirm-box h4 { margin: 0 0 8px; color: var(--text); font-size: 14px; }
+.confirm-box p { margin: 0 0 18px; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .confirm-actions { display: flex; gap: 10px; justify-content: center; }
 .btn-danger {
-  padding: 8px 16px; background: #c96a56; color: #fff;
+  padding: 8px 16px; background: var(--error); color: var(--error-contrast);
   border: 0; border-radius: 7px; font-size: 12px; font-weight: 700;
   cursor: pointer; transition: all 150ms;
 }
-.btn-danger:hover { background: #d47a68; }
+.btn-danger:hover { background: var(--error-hover); }
 .btn-secondary {
-  padding: 8px 14px; background: transparent; color: #9fa492;
-  border: 1px solid #3a4033; border-radius: 7px; font-size: 12px;
+  padding: 8px 14px; background: transparent; color: var(--muted);
+  border: 1px solid var(--border-strong); border-radius: 7px; font-size: 12px;
   font-weight: 600; cursor: pointer; transition: all 150ms;
 }
-.btn-secondary:hover { background: #1f231b; color: #ecebdc; }
+.btn-secondary:hover { background: var(--surface-hover); color: var(--text); }
 </style>

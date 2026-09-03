@@ -364,7 +364,7 @@ function submit() {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--backdrop-strong);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -389,10 +389,10 @@ function submit() {
   max-height: 92vh;
   display: flex;
   flex-direction: column;
-  background: #1a1e17;
-  border: 1px solid #3a4033;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 24px 64px var(--shadow-strong);
   animation: slideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
@@ -414,7 +414,7 @@ function submit() {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #2e3329;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -422,7 +422,7 @@ function submit() {
   margin: 0;
   font-size: 15px;
   font-weight: 700;
-  color: #ecebdc;
+  color: var(--text);
 }
 
 .close-btn {
@@ -431,16 +431,16 @@ function submit() {
   height: 30px;
   place-items: center;
   background: transparent;
-  border: 1px solid #3a4033;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   cursor: pointer;
-  color: #9fa492;
+  color: var(--muted);
   transition: all 150ms;
 }
 
 .close-btn:hover {
-  background: #252a20;
-  color: #ecebdc;
+  background: var(--surface-hover);
+  color: var(--text);
 }
 
 .close-btn svg {
@@ -455,11 +455,11 @@ function submit() {
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #434936 transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .accordion-section {
-  border-bottom: 1px solid #252a20;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .accordion-header {
@@ -476,7 +476,7 @@ function submit() {
 }
 
 .accordion-header:hover {
-  background: #1e2219;
+  background: var(--surface-elevated);
 }
 
 .acc-badge {
@@ -484,13 +484,13 @@ function submit() {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #d8be76;
+  color: var(--accent);
 }
 
 .acc-arrow {
   width: 14px;
   fill: none;
-  stroke: #9fa492;
+  stroke: var(--muted);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
@@ -523,12 +523,12 @@ function submit() {
 
 .field>span {
   font-size: 10px;
-  color: #9fa492;
+  color: var(--muted);
   font-weight: 500;
 }
 
 .field em {
-  color: #c96a56;
+  color: var(--error);
   font-style: normal;
   margin-left: 2px;
 }
@@ -536,10 +536,10 @@ function submit() {
 .field input,
 .field select,
 .field textarea {
-  background: #13160f;
-  border: 1px solid #3a4033;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  color: #ecebdc;
+  color: var(--text);
   font-size: 12px;
   padding: 8px 10px;
   outline: none;
@@ -550,20 +550,31 @@ function submit() {
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: #d8be76;
+  border-color: var(--accent);
 }
 
 .field input[type="file"] {
   padding: 6px 10px;
   cursor: pointer;
-  color: #9fa492;
+  color: var(--muted);
+}
+.field input[type="file"]::file-selector-button {
+  margin-right: 8px;
+  padding: 4px 8px;
+  color: var(--text);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
 }
 
 .photo-preview {
   margin-top: 8px;
   max-height: 100px;
   border-radius: 6px;
-  border: 1px solid #3a4033;
+  border: 1px solid var(--border-strong);
   object-fit: cover;
 }
 
@@ -572,15 +583,15 @@ function submit() {
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid #2e3329;
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
-  background: #1a1e17;
+  background: var(--surface-raised);
 }
 
 .btn-primary {
   padding: 9px 20px;
-  background: #d8be76;
-  color: #10120e;
+  background: var(--accent);
+  color: var(--accent-text);
   border: 0;
   border-radius: 7px;
   font-size: 12px;
@@ -590,14 +601,14 @@ function submit() {
 }
 
 .btn-primary:hover {
-  background: #e0cc8e;
+  background: var(--accent-light);
 }
 
 .btn-secondary {
   padding: 9px 16px;
   background: transparent;
-  color: #9fa492;
-  border: 1px solid #3a4033;
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
   border-radius: 7px;
   font-size: 12px;
   font-weight: 600;
@@ -606,7 +617,7 @@ function submit() {
 }
 
 .btn-secondary:hover {
-  background: #1f231b;
-  color: #ecebdc;
+  background: var(--surface-hover);
+  color: var(--text);
 }
 </style>

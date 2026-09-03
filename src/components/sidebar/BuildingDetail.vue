@@ -77,16 +77,16 @@ dd { color: var(--text-soft); overflow-wrap: anywhere; text-align: right; }
   width: 100%;
   margin-top: 14px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #2a3024 0%, #1e2219 100%);
-  border: 1px solid #d8be76;
+  background: var(--surface-elevated);
+  border: 1px solid var(--accent);
   border-radius: 8px;
-  color: #d8be76;
+  color: var(--accent);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: all 150ms;
 }
-.manage-btn:hover { background: linear-gradient(135deg, #343d2c 0%, #272c22 100%); box-shadow: 0 0 0 1px #d8be76; }
+.manage-btn:hover { background: var(--accent-surface); box-shadow: 0 0 0 1px var(--accent); }
 .manage-btn svg { width: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .manage-btn .arrow { margin-left: auto; opacity: 0.6; }
 </style>
