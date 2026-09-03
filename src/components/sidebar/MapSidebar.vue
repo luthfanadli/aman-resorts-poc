@@ -4,6 +4,7 @@ import BuildingDetail from './BuildingDetail.vue'
 import ParcelDetail from './ParcelDetail.vue'
 import ParcelSearch from './ParcelSearch.vue'
 import ParcelSummary from './ParcelSummary.vue'
+import amanLogoUrl from '../../assets/aman-logo.svg'
 import type {
   BuildingFeature,
   MapRenderStats,
@@ -45,7 +46,7 @@ const emit = defineEmits<{
 <template>
   <aside class="sidebar" :class="{ 'is-open': mobileOpen }">
     <header class="brand-bar">
-      <div class="brand-mark" aria-hidden="true">A</div>
+      <img class="brand-logo" :src="amanLogoUrl" alt="Aman" />
       <div>
         <h1>Amandari Land Map</h1>
         <p>Kedewatan, Ubud</p>
@@ -105,8 +106,8 @@ const emit = defineEmits<{
 
 <style scoped>
 .sidebar { position: relative; z-index: 20; display: flex; min-width: 0; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--border); }
-.brand-bar { display: flex; min-height: 78px; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-.brand-mark { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; color: #f3d989; border: 1px solid #68664e; font-family: Georgia, serif; font-size: 19px; }
+.brand-bar { display: flex; min-height: 78px; align-items: center; gap: 18px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.brand-logo { width: 48px; height: auto; flex: 0 0 auto; filter: brightness(0) saturate(100%) invert(87%) sepia(21%) saturate(630%) hue-rotate(351deg) brightness(97%) contrast(98%); }
 h1, p { margin: 0; }
 h1 { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.4; }
 .brand-bar p { margin-top: 2px; color: var(--muted); font-size: 11px; }
