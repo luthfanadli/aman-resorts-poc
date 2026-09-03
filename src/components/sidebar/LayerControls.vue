@@ -144,7 +144,7 @@ h2 { margin: 0; color: #d8d9cb; font-size: 11px; font-weight: 700; }
 .layer-copy em { overflow: hidden; color: #858b7a; font-size: 9px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .layer-swatch { width: 34px; height: 30px; border: 1px solid #4a5041; border-radius: 4px; }
 .parcel-swatch { background: linear-gradient(58deg, transparent 46%, #fff 47% 50%, transparent 51%), #d6b454; }
-.building-swatch { background: linear-gradient(90deg, transparent 46%, #f5e9d8 47% 50%, transparent 51%), #9b6b54; }
+.building-swatch { background: linear-gradient(90deg, transparent 46%, #e8804c 47% 50%, transparent 51%), #9b6b54; }
 .layer-actions { display: flex; align-items: center; gap: 3px; }
 .icon-button { display: grid; width: 27px; height: 27px; padding: 0; place-items: center; color: #777d6e; background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
 .icon-button:hover,

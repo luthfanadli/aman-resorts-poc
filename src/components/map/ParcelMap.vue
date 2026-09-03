@@ -41,6 +41,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  clearSelection: []
   error: [message: string]
   openPanel: []
   ready: [featureCount: number]
@@ -62,6 +63,7 @@ let hoveredId: string | number | undefined
 let readyEmitted = false
 let openFreeMapDarkLoaded = false
 let openFreeMapDarkLayerIds: string[] = []
+let suppressPopupClose = false
 
 function cloneParcelCollection() {
   return JSON.parse(JSON.stringify(props.collection)) as ParcelCollection
@@ -209,7 +211,7 @@ function syncSelection() {
     ]
     map.setFilter(MAP_LAYER.buildingSelected, buildingFilter)
   }
-  if (props.selectedParcelId === null && props.selectedBuildingId === null) popup?.remove()
+  if (props.selectedParcelId === null && props.selectedBuildingId === null) removePopup()
 }
 
 function updateRenderStats() {
@@ -286,13 +288,30 @@ function createBuildingPopupContent(feature: BuildingCollection['features'][numb
   return content
 }
 
+function removePopup() {
+  if (!popup) return
+  suppressPopupClose = true
+  popup.remove()
+  popup = null
+  suppressPopupClose = false
+}
+
+function activatePopup(nextPopup: maplibregl.Popup) {
+  popup = nextPopup
+  nextPopup.on('close', () => {
+    if (popup === nextPopup) popup = null
+    if (!suppressPopupClose) emit('clearSelection')
+  })
+}
+
 function showPopup(feature: ParcelFeature, coordinate: [number, number]) {
   if (!map) return
-  popup?.remove()
-  popup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
+  removePopup()
+  const nextPopup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
     .setLngLat(coordinate)
     .setDOMContent(createPopupContent(feature))
     .addTo(map)
+  activatePopup(nextPopup)
 }
 
 function showBuildingPopup(
@@ -300,11 +319,12 @@ function showBuildingPopup(
   coordinate: [number, number],
 ) {
   if (!map) return
-  popup?.remove()
-  popup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
+  removePopup()
+  const nextPopup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
     .setLngLat(coordinate)
     .setDOMContent(createBuildingPopupContent(feature))
     .addTo(map)
+  activatePopup(nextPopup)
 }
 
 function focusParcel(parcelId: number) {
@@ -476,8 +496,8 @@ function initializeMap() {
             type: 'line',
             source: MAP_SOURCE.buildings,
             paint: {
-              'line-color': '#f5e9d8',
-              'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.7, 19, 1.7],
+              'line-color': '#e8804c',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.2, 19, 2.5],
               'line-opacity': props.buildingStrokeOpacity,
             },
           },
@@ -581,7 +601,7 @@ onMounted(initializeMap)
 onBeforeUnmount(() => {
   if (readyTimer) clearTimeout(readyTimer)
   resizeObserver?.disconnect()
-  popup?.remove()
+  removePopup()
   map?.remove()
 })
 </script>

@@ -58,9 +58,13 @@ function selectBuilding(buildingId: number) {
   if (window.innerWidth <= 760) mobilePanelOpen.value = false
 }
 
-function resetView() {
+function clearSelection() {
   selectedBuildingId.value = null
   selectedParcelId.value = null
+}
+
+function resetView() {
+  clearSelection()
   mapRef.value?.fitAll()
 }
 
@@ -114,6 +118,7 @@ function handleMapReady(featureCount: number) {
       :selected-building-id="selectedBuildingId"
       :selected-parcel-id="selectedParcelId"
       @error="mapError = $event"
+      @clear-selection="clearSelection"
       @open-panel="mobilePanelOpen = true"
       @ready="handleMapReady"
       @select-building="selectBuilding"
