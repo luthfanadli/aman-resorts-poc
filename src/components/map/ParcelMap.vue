@@ -6,11 +6,13 @@ import BasemapControl from './BasemapControl.vue'
 import {
   BASEMAP_OPTIONS,
   BUILDING_COLOR,
-  CARTO_DARK_TILES,
-  CARTO_POSITRON_TILES,
   GOOGLE_IMAGERY_TILES,
+  HUMANITARIAN_TILES,
   MAP_LAYER,
   MAP_SOURCE,
+  OPEN_FREE_MAP_DARK_STYLE_URL,
+  OPEN_FREE_MAP_GLYPHS_URL,
+  OPEN_FREE_MAP_SPRITE_URL,
   OPENSTREETMAP_TILES,
   PARCEL_COLOR,
 } from '../../lib/map/constants'
@@ -34,6 +36,7 @@ const props = defineProps<{
   parcelFillOpacity: number
   parcelStrokeOpacity: number
   parcelsVisible: boolean
+  selectedBuildingId: number | null
   selectedParcelId: number | null
 }>()
 
@@ -41,6 +44,7 @@ const emit = defineEmits<{
   error: [message: string]
   openPanel: []
   ready: [featureCount: number]
+  selectBuilding: [buildingId: number]
   select: [parcelId: number]
   stats: [stats: MapRenderStats]
 }>()
@@ -56,13 +60,22 @@ let resizeObserver: ResizeObserver | null = null
 let readyTimer: ReturnType<typeof setTimeout> | null = null
 let hoveredId: string | number | undefined
 let readyEmitted = false
+let openFreeMapDarkLoaded = false
+let openFreeMapDarkLayerIds: string[] = []
 
 function cloneParcelCollection() {
   return JSON.parse(JSON.stringify(props.collection)) as ParcelCollection
 }
 
 function cloneBuildingCollection() {
-  return JSON.parse(JSON.stringify(props.buildingCollection)) as BuildingCollection
+  const collection = JSON.parse(JSON.stringify(props.buildingCollection)) as BuildingCollection
+  return {
+    ...collection,
+    features: collection.features.map((feature, index) => ({
+      ...feature,
+      properties: { ...feature.properties, __mapFeatureId: index },
+    })),
+  }
 }
 
 function syncVisibility() {
@@ -80,7 +93,11 @@ function syncVisibility() {
       )
     }
   }
-  for (const layerId of [MAP_LAYER.buildingFill, MAP_LAYER.buildingOutline]) {
+  for (const layerId of [
+    MAP_LAYER.buildingFill,
+    MAP_LAYER.buildingOutline,
+    MAP_LAYER.buildingSelected,
+  ]) {
     if (map.getLayer(layerId)) {
       map.setLayoutProperty(
         layerId,
@@ -94,9 +111,13 @@ function syncVisibility() {
 function syncBasemap() {
   if (!map) return
   for (const basemap of BASEMAP_OPTIONS) {
-    if (map.getLayer(basemap.layerId)) {
+    const layerIds = basemap.id === 'openFreeMapDark'
+      ? openFreeMapDarkLayerIds
+      : [basemap.layerId]
+    for (const layerId of layerIds) {
+      if (!map.getLayer(layerId)) continue
       map.setLayoutProperty(
-        basemap.layerId,
+        layerId,
         'visibility',
         basemap.id === activeBasemap.value ? 'visible' : 'none',
       )
@@ -106,6 +127,41 @@ function syncBasemap() {
 
 function selectBasemap(basemap: BasemapId) {
   activeBasemap.value = basemap
+}
+
+type OpenFreeMapStyle = {
+  sources: Record<string, maplibregl.SourceSpecification>
+  layers: maplibregl.LayerSpecification[]
+}
+
+async function loadOpenFreeMapDark() {
+  if (!map || openFreeMapDarkLoaded) return
+  try {
+    const response = await fetch(OPEN_FREE_MAP_DARK_STYLE_URL)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const style = await response.json() as OpenFreeMapStyle
+    if (!style.sources || !style.layers) throw new Error('Format style tidak valid')
+
+    for (const [sourceId, source] of Object.entries(style.sources)) {
+      const id = `ofm-dark-${sourceId}`
+      if (!map.getSource(id)) map.addSource(id, source)
+    }
+
+    for (const sourceLayer of style.layers) {
+      const id = `ofm-dark-${sourceLayer.id}`
+      const layer = { ...sourceLayer, id } as maplibregl.LayerSpecification
+      if ('source' in layer && layer.source) {
+        layer.source = `ofm-dark-${layer.source}`
+      }
+      map.addLayer(layer, MAP_LAYER.parcelFill)
+      openFreeMapDarkLayerIds.push(id)
+    }
+
+    openFreeMapDarkLoaded = true
+    syncBasemap()
+  } catch (error) {
+    console.warn('OpenFreeMap Dark gagal dimuat.', error)
+  }
 }
 
 function syncOpacity() {
@@ -136,14 +192,24 @@ function syncOpacity() {
 }
 
 function syncSelection() {
-  if (!map?.getLayer(MAP_LAYER.parcelSelected)) return
-  const idFilter: maplibregl.FilterSpecification = [
-    '==',
-    ['get', 'OBJECTID'],
-    props.selectedParcelId ?? -1,
-  ]
-  map.setFilter(MAP_LAYER.parcelSelected, idFilter)
-  if (props.selectedParcelId === null) popup?.remove()
+  if (!map) return
+  if (map.getLayer(MAP_LAYER.parcelSelected)) {
+    const parcelFilter: maplibregl.FilterSpecification = [
+      '==',
+      ['get', 'OBJECTID'],
+      props.selectedParcelId ?? -1,
+    ]
+    map.setFilter(MAP_LAYER.parcelSelected, parcelFilter)
+  }
+  if (map.getLayer(MAP_LAYER.buildingSelected)) {
+    const buildingFilter: maplibregl.FilterSpecification = [
+      '==',
+      ['get', '__mapFeatureId'],
+      props.selectedBuildingId ?? -1,
+    ]
+    map.setFilter(MAP_LAYER.buildingSelected, buildingFilter)
+  }
+  if (props.selectedParcelId === null && props.selectedBuildingId === null) popup?.remove()
 }
 
 function updateRenderStats() {
@@ -192,12 +258,52 @@ function createPopupContent(feature: ParcelFeature) {
   return content
 }
 
+function formatBuildingArea(value: unknown) {
+  const area = Number(value)
+  return Number.isFinite(area)
+    ? `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(area)} m²`
+    : 'Luas tidak tersedia'
+}
+
+function buildingLabel(feature: BuildingCollection['features'][number]) {
+  const code = feature.properties.full_plus
+  return typeof code === 'string' && code ? `Bangunan ${code}` : 'Bangunan'
+}
+
+function createBuildingPopupContent(feature: BuildingCollection['features'][number]) {
+  const content = document.createElement('div')
+  content.className = 'parcel-popup building-popup'
+  const title = document.createElement('strong')
+  title.textContent = buildingLabel(feature)
+  const area = document.createElement('span')
+  area.textContent = `Luas: ${formatBuildingArea(feature.properties.area_in_me)}`
+  const confidence = document.createElement('span')
+  const value = Number(feature.properties.confidence)
+  confidence.textContent = Number.isFinite(value)
+    ? `Confidence: ${Math.round(value * 100)}%`
+    : 'Confidence tidak tersedia'
+  content.append(title, area, confidence)
+  return content
+}
+
 function showPopup(feature: ParcelFeature, coordinate: [number, number]) {
   if (!map) return
   popup?.remove()
-  popup = new maplibregl.Popup({ closeButton: false, offset: 12, maxWidth: '280px' })
+  popup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
     .setLngLat(coordinate)
     .setDOMContent(createPopupContent(feature))
+    .addTo(map)
+}
+
+function showBuildingPopup(
+  feature: BuildingCollection['features'][number],
+  coordinate: [number, number],
+) {
+  if (!map) return
+  popup?.remove()
+  popup = new maplibregl.Popup({ closeButton: true, offset: 12, maxWidth: '280px' })
+    .setLngLat(coordinate)
+    .setDOMContent(createBuildingPopupContent(feature))
     .addTo(map)
 }
 
@@ -216,6 +322,14 @@ function handleMapClick(event: maplibregl.MapLayerMouseEvent) {
   if (!feature) return
   emit('select', id)
   showPopup(feature, event.lngLat.toArray() as [number, number])
+}
+
+function handleBuildingClick(event: maplibregl.MapLayerMouseEvent) {
+  const id = Number(event.features?.[0]?.properties.__mapFeatureId)
+  const feature = props.buildingCollection.features[id]
+  if (!feature) return
+  emit('selectBuilding', id)
+  showBuildingPopup(feature, event.lngLat.toArray() as [number, number])
 }
 
 function handleMouseMove(event: maplibregl.MapLayerMouseEvent) {
@@ -264,6 +378,8 @@ function initializeMap() {
       attributionControl: false,
       style: {
         version: 8,
+        glyphs: OPEN_FREE_MAP_GLYPHS_URL,
+        sprite: OPEN_FREE_MAP_SPRITE_URL,
         sources: {
           [MAP_SOURCE.googleImagery]: {
             type: 'raster',
@@ -272,11 +388,11 @@ function initializeMap() {
             attribution: 'Imagery © Google',
             maxzoom: 21,
           },
-          [MAP_SOURCE.cartoPositron]: {
+          [MAP_SOURCE.humanitarian]: {
             type: 'raster',
-            tiles: CARTO_POSITRON_TILES,
+            tiles: HUMANITARIAN_TILES,
             tileSize: 256,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, © <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '© OpenStreetMap contributors, Humanitarian OpenStreetMap Team',
             maxzoom: 20,
           },
           [MAP_SOURCE.openStreetMap]: {
@@ -285,13 +401,6 @@ function initializeMap() {
             tileSize: 256,
             attribution: '© OpenStreetMap contributors',
             maxzoom: 19,
-          },
-          [MAP_SOURCE.cartoDark]: {
-            type: 'raster',
-            tiles: CARTO_DARK_TILES,
-            tileSize: 256,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, © <a href="https://carto.com/attributions">CARTO</a>',
-            maxzoom: 20,
           },
           [MAP_SOURCE.parcels]: {
             type: 'geojson',
@@ -316,9 +425,9 @@ function initializeMap() {
             },
           },
           {
-            id: MAP_LAYER.cartoPositron,
+            id: MAP_LAYER.humanitarian,
             type: 'raster',
-            source: MAP_SOURCE.cartoPositron,
+            source: MAP_SOURCE.humanitarian,
             layout: { visibility: 'none' },
             paint: { 'raster-fade-duration': 0 },
           },
@@ -326,13 +435,6 @@ function initializeMap() {
             id: MAP_LAYER.openStreetMap,
             type: 'raster',
             source: MAP_SOURCE.openStreetMap,
-            layout: { visibility: 'none' },
-            paint: { 'raster-fade-duration': 0 },
-          },
-          {
-            id: MAP_LAYER.cartoDark,
-            type: 'raster',
-            source: MAP_SOURCE.cartoDark,
             layout: { visibility: 'none' },
             paint: { 'raster-fade-duration': 0 },
           },
@@ -380,6 +482,17 @@ function initializeMap() {
             },
           },
           {
+            id: MAP_LAYER.buildingSelected,
+            type: 'line',
+            source: MAP_SOURCE.buildings,
+            filter: ['==', ['get', '__mapFeatureId'], -1],
+            paint: {
+              'line-color': '#ffe36b',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2, 19, 4],
+              'line-opacity': props.buildingStrokeOpacity,
+            },
+          },
+          {
             id: MAP_LAYER.parcelSelected,
             type: 'line',
             source: MAP_SOURCE.parcels,
@@ -396,11 +509,17 @@ function initializeMap() {
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right')
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric', maxWidth: 110 }), 'bottom-right')
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
 
     map.on('mousemove', MAP_LAYER.parcelFill, handleMouseMove)
     map.on('mouseleave', MAP_LAYER.parcelFill, handleMouseLeave)
     map.on('click', MAP_LAYER.parcelFill, handleMapClick)
+    map.on('click', MAP_LAYER.buildingFill, handleBuildingClick)
+    map.on('mouseenter', MAP_LAYER.buildingFill, () => {
+      if (map) map.getCanvas().style.cursor = 'pointer'
+    })
+    map.on('mouseleave', MAP_LAYER.buildingFill, () => {
+      if (map) map.getCanvas().style.cursor = ''
+    })
     map.on('idle', updateRenderStats)
     map.on('style.load', () => {
       syncBasemap()
@@ -415,6 +534,7 @@ function initializeMap() {
       }
     })
     map.on('load', () => {
+      void loadOpenFreeMapDark()
       if (map?.isSourceLoaded(MAP_SOURCE.parcels)) markSourceReady()
     })
     map.on('error', (event: maplibregl.ErrorEvent) => {
@@ -452,6 +572,7 @@ watch(() => props.parcelFillOpacity, syncOpacity)
 watch(() => props.parcelStrokeOpacity, syncOpacity)
 watch(() => props.buildingFillOpacity, syncOpacity)
 watch(() => props.buildingStrokeOpacity, syncOpacity)
+watch(() => props.selectedBuildingId, syncSelection)
 watch(() => props.selectedParcelId, syncSelection)
 
 defineExpose<ParcelMapApi>({ fitAll, focusParcel })
@@ -527,13 +648,15 @@ onBeforeUnmount(() => {
 .maplibregl-ctrl-group button + button { border-top-color: #353a2e; }
 .maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(92%) sepia(10%) saturate(311%); }
 .maplibregl-ctrl-scale { color: #f1efe2; background: rgba(19, 22, 17, 0.75); border-color: #e5e2d3; font-family: 'Manrope', sans-serif; font-size: 9px; }
-.maplibregl-ctrl-attrib { color: #555; font-size: 9px; }
 .maplibregl-popup-content { padding: 0; color: #e9e9dc; background: #1a1e17; border: 1px solid #4a503e; border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32); }
+.maplibregl-popup-close-button { width: 28px; height: 28px; color: #c9cdbd; font-size: 17px; line-height: 24px; }
+.maplibregl-popup-close-button:hover { color: #fff5ca; background: #2b3026; }
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #4a503e; }
 .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #4a503e; }
 .parcel-popup { display: flex; min-width: 175px; flex-direction: column; gap: 4px; padding: 11px 13px; }
 .parcel-popup strong { color: #f0d98d; font-size: 12px; }
 .parcel-popup span { color: #a9ae9d; font-family: 'Manrope', sans-serif; font-size: 9px; }
+.building-popup strong { padding-right: 20px; color: #e5baa4; }
 
 .mobile-panel-button { display: none; }
 

@@ -35,7 +35,7 @@ function rangeValue(event: Event) {
   <section class="panel-section">
     <div class="section-heading">
       <h2>Layer peta</h2>
-      <button type="button" @click="emit('reset')">Lihat semua</button>
+      <!-- <button type="button" @click="emit('reset')">Lihat semua</button> -->
     </div>
 
     <div class="layer-item">

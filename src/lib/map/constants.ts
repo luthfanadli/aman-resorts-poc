@@ -1,22 +1,22 @@
 export const MAP_SOURCE = {
   googleImagery: 'google-imagery',
-  cartoPositron: 'carto-positron',
+  humanitarian: 'osm-humanitarian',
   openStreetMap: 'openstreetmap',
-  cartoDark: 'carto-dark',
   parcels: 'parcels',
   buildings: 'buildings',
 } as const
 
 export const MAP_LAYER = {
   googleImagery: 'basemap-google-imagery',
-  cartoPositron: 'basemap-carto-positron',
+  humanitarian: 'basemap-osm-humanitarian',
   openStreetMap: 'basemap-openstreetmap',
-  cartoDark: 'basemap-carto-dark',
+  openFreeMapDark: 'basemap-open-free-map-dark',
   parcelFill: 'parcel-fill',
   parcelOutline: 'parcel-outline',
   parcelSelected: 'parcel-selected',
   buildingFill: 'building-fill',
   buildingOutline: 'building-outline',
+  buildingSelected: 'building-selected',
 } as const
 
 export const GOOGLE_IMAGERY_TILES = [
@@ -26,17 +26,19 @@ export const GOOGLE_IMAGERY_TILES = [
   'https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
 ]
 
-export const CARTO_POSITRON_TILES = [
-  'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+export const HUMANITARIAN_TILES = [
+  'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+  'https://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+  'https://c.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
 ]
 
 export const OPENSTREETMAP_TILES = [
   'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
 ]
 
-export const CARTO_DARK_TILES = [
-  'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-]
+export const OPEN_FREE_MAP_DARK_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
+export const OPEN_FREE_MAP_GLYPHS_URL = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf'
+export const OPEN_FREE_MAP_SPRITE_URL = 'https://tiles.openfreemap.org/sprites/ofm_f384/ofm'
 
 export const BASEMAP_OPTIONS = [
   {
@@ -46,10 +48,10 @@ export const BASEMAP_OPTIONS = [
     previewUrl: 'https://mt0.google.com/vt/lyrs=s&x=107495&y=68638&z=17',
   },
   {
-    id: 'positron',
-    label: 'CartoDB Positron (Light)',
-    layerId: MAP_LAYER.cartoPositron,
-    previewUrl: 'https://basemaps.cartocdn.com/light_all/1/1/1@2x.png',
+    id: 'humanitarian',
+    label: 'OSM Humanitarian',
+    layerId: MAP_LAYER.humanitarian,
+    previewUrl: 'https://a.tile.openstreetmap.fr/hot/17/107495/68638.png',
   },
   {
     id: 'openStreetMap',
@@ -58,10 +60,10 @@ export const BASEMAP_OPTIONS = [
     previewUrl: 'https://tile.openstreetmap.org/17/107495/68638.png',
   },
   {
-    id: 'darkmatter',
-    label: 'CartoDB Darkmatter (Dark)',
-    layerId: MAP_LAYER.cartoDark,
-    previewUrl: 'https://basemaps.cartocdn.com/dark_all/1/1/1@2x.png',
+    id: 'openFreeMapDark',
+    label: 'OpenFreeMap Dark',
+    layerId: MAP_LAYER.openFreeMapDark,
+    previewUrl: '',
   },
 ] as const
 

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import LayerControls from './LayerControls.vue'
+import BuildingDetail from './BuildingDetail.vue'
 import ParcelDetail from './ParcelDetail.vue'
 import ParcelSearch from './ParcelSearch.vue'
 import ParcelSummary from './ParcelSummary.vue'
 import type {
+  BuildingFeature,
   MapRenderStats,
   ParcelCollection,
   ParcelFeature,
@@ -23,6 +25,7 @@ defineProps<{
   parcelFillOpacity: number
   parcelStrokeOpacity: number
   renderStats: MapRenderStats
+  selectedBuilding: BuildingFeature | null
   selectedParcel: ParcelFeature | null
 }>()
 
@@ -79,6 +82,11 @@ const emit = defineEmits<{
         :parcel="selectedParcel"
         @close="emit('reset')"
       />
+      <BuildingDetail
+        v-else-if="selectedBuilding"
+        :building="selectedBuilding"
+        @close="emit('reset')"
+      />
 
       <div class="source-status">
         <span :class="{ error: Boolean(error) }"></span>
@@ -102,7 +110,7 @@ const emit = defineEmits<{
 h1, p { margin: 0; }
 h1 { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.4; }
 .brand-bar p { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.sidebar-content { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #434936 transparent; }
+.sidebar-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #434936 transparent; }
 .source-status { display: flex; align-items: flex-start; gap: 8px; padding: 18px 20px; }
 .source-status > span { width: 6px; height: 6px; flex: 0 0 auto; margin-top: 3px; background: #9db361; border-radius: 50%; }
 .source-status > span.error { background: #c96a56; }

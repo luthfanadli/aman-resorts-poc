@@ -7,6 +7,7 @@ import { useParcelData } from './composables/useParcelData'
 import buildingDataUrl from './assets/data/Bangunan.geojson?url'
 import parcelDataUrl from './assets/data/Polygon Amandari.geojson?url'
 import type {
+  BuildingFeature,
   MapRenderStats,
   ParcelMapApi,
 } from './types/parcel'
@@ -19,6 +20,7 @@ const {
 } = useBuildingData(buildingDataUrl)
 
 const mapRef = ref<ParcelMapApi | null>(null)
+const selectedBuildingId = ref<number | null>(null)
 const selectedParcelId = ref<number | null>(null)
 const parcelsVisible = ref(true)
 const buildingsVisible = ref(true)
@@ -34,17 +36,30 @@ const renderStats = ref<MapRenderStats>({ sourceFeatures: 0, renderedFeatures: 0
 const selectedParcel = computed(() =>
   collection.value?.features.find((feature) => feature.id === selectedParcelId.value) ?? null,
 )
+const selectedBuilding = computed<BuildingFeature | null>(() =>
+  selectedBuildingId.value === null
+    ? null
+    : buildingCollection.value?.features[selectedBuildingId.value] ?? null,
+)
 
 const visibleError = computed(() => dataError.value || buildingDataError.value || mapError.value)
 const dataLoading = computed(() => isLoading.value || buildingsLoading.value)
 
 function selectParcel(parcelId: number, focus = false) {
+  selectedBuildingId.value = null
   selectedParcelId.value = parcelId
   if (focus) mapRef.value?.focusParcel(parcelId)
   if (window.innerWidth <= 760) mobilePanelOpen.value = false
 }
 
+function selectBuilding(buildingId: number) {
+  selectedParcelId.value = null
+  selectedBuildingId.value = buildingId
+  if (window.innerWidth <= 760) mobilePanelOpen.value = false
+}
+
 function resetView() {
+  selectedBuildingId.value = null
   selectedParcelId.value = null
   mapRef.value?.fitAll()
 }
@@ -72,6 +87,7 @@ function handleMapReady(featureCount: number) {
       :parcel-fill-opacity="parcelFillOpacity"
       :parcel-stroke-opacity="parcelStrokeOpacity"
       :render-stats="renderStats"
+      :selected-building="selectedBuilding"
       :selected-parcel="selectedParcel"
       @close="mobilePanelOpen = false"
       @reset="resetView"
@@ -95,10 +111,12 @@ function handleMapReady(featureCount: number) {
       :parcels-visible="parcelsVisible"
       :parcel-fill-opacity="parcelFillOpacity"
       :parcel-stroke-opacity="parcelStrokeOpacity"
+      :selected-building-id="selectedBuildingId"
       :selected-parcel-id="selectedParcelId"
       @error="mapError = $event"
       @open-panel="mobilePanelOpen = true"
       @ready="handleMapReady"
+      @select-building="selectBuilding"
       @select="selectParcel"
       @stats="renderStats = $event"
     />

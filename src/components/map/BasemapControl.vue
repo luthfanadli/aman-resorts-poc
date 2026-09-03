@@ -72,7 +72,7 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: 6;
   right: 12px;
-  bottom: 58px;
+  bottom: 48px;
 }
 
 .basemap-trigger {
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
 @media (max-width: 760px) {
   .basemap-control {
     right: 10px;
-    bottom: 56px;
+    bottom: 46px;
   }
 
   .basemap-menu {
