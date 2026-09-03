@@ -1,3 +1,5 @@
+import type { ThemeMode } from '../../types/theme'
+
 export const MAP_SOURCE = {
   googleImagery: 'google-imagery',
   humanitarian: 'osm-humanitarian',
@@ -71,3 +73,26 @@ export type BasemapId = (typeof BASEMAP_OPTIONS)[number]['id']
 
 export const PARCEL_COLOR = '#d6b454'
 export const BUILDING_COLOR = '#9b6b54'
+
+export const MAP_THEME_COLORS: Record<ThemeMode, {
+  buildingFill: string
+  buildingOutline: string
+  parcelFill: string
+  parcelOutline: string
+  selection: string
+}> = {
+  dark: {
+    parcelFill: PARCEL_COLOR,
+    parcelOutline: '#ffffff',
+    buildingFill: BUILDING_COLOR,
+    buildingOutline: '#e8804c',
+    selection: '#ffe36b',
+  },
+  light: {
+    parcelFill: '#c99f33',
+    parcelOutline: '#545326',
+    buildingFill: '#aa765f',
+    buildingOutline: '#a64c2e',
+    selection: '#755f10',
+  },
+}

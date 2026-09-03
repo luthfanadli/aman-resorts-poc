@@ -34,16 +34,16 @@ const emit = defineEmits<{ close: [] }>()
 </template>
 
 <style scoped>
-.parcel-detail { max-height: 320px; padding: 18px 20px; overflow-y: auto; overscroll-behavior: contain; color: #dedfd1; background: #1a1e17; border-bottom: 1px solid var(--border); scrollbar-color: #d8be76 #10120e; scrollbar-width: thin; }
+.parcel-detail { max-height: 320px; padding: 18px 20px; overflow-y: auto; overscroll-behavior: contain; color: var(--text-soft); background: var(--surface-raised); border-bottom: 1px solid var(--border); scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar-width: thin; }
 .parcel-detail::-webkit-scrollbar { width: 8px; }
-.parcel-detail::-webkit-scrollbar-track { background: #10120e; }
-.parcel-detail::-webkit-scrollbar-thumb { background: #d8be76; border: 2px solid #10120e; border-radius: 4px; }
+.parcel-detail::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+.parcel-detail::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border: 2px solid var(--scrollbar-track); border-radius: 4px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-h2 { margin: 0; color: #d8d9cb; font-size: 11px; font-weight: 700; }
-button { padding: 0; color: #d8be76; background: none; border: 0; cursor: pointer; font-size: 10px; }
-.parcel-title { display: block; margin-bottom: 12px; color: #f0d98d; font-size: 14px; }
+h2 { margin: 0; color: var(--muted-strong); font-size: 11px; font-weight: 700; }
+button { padding: 0; color: var(--accent); background: none; border: 0; cursor: pointer; font-size: 10px; }
+.parcel-title { display: block; margin-bottom: 12px; color: var(--accent-strong); font-size: 14px; }
 dl, dl div { margin: 0; }
-dl div { display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; padding: 7px 0; border-top: 1px solid #30352a; font-size: 10px; }
+dl div { display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border-subtle); font-size: 10px; }
 dt { color: var(--muted); }
-dd { color: #dedfd1; overflow-wrap: anywhere; text-align: right; }
+dd { color: var(--text-soft); overflow-wrap: anywhere; text-align: right; }
 </style>

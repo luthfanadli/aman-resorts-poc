@@ -11,6 +11,7 @@ import type {
   ParcelCollection,
   ParcelFeature,
 } from '../../types/parcel'
+import type { ThemeMode } from '../../types/theme'
 
 defineProps<{
   buildingCount: number
@@ -28,6 +29,7 @@ defineProps<{
   renderStats: MapRenderStats
   selectedBuilding: BuildingFeature | null
   selectedParcel: ParcelFeature | null
+  theme: ThemeMode
 }>()
 
 const emit = defineEmits<{
@@ -36,6 +38,7 @@ const emit = defineEmits<{
   select: [parcelId: number]
   toggleBuildings: []
   toggleParcels: []
+  'update:theme': [theme: ThemeMode]
   'update:buildingFillOpacity': [value: number]
   'update:buildingStrokeOpacity': [value: number]
   'update:parcelFillOpacity': [value: number]
@@ -47,13 +50,35 @@ const emit = defineEmits<{
   <aside class="sidebar" :class="{ 'is-open': mobileOpen }">
     <header class="brand-bar">
       <img class="brand-logo" :src="amanLogoUrl" alt="Aman" />
-      <div>
+      <div class="brand-copy">
         <h1>Amandari Land Map</h1>
         <p>Kedewatan, Ubud</p>
       </div>
       <button class="panel-close" type="button" aria-label="Tutup panel" @click="emit('close')">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       </button>
+      <div class="theme-control" role="group" aria-label="Mode tampilan">
+        <button
+          type="button"
+          aria-label="Gunakan mode terang"
+          title="Light mode"
+          :class="{ active: theme === 'light' }"
+          :aria-pressed="theme === 'light'"
+          @click="emit('update:theme', 'light')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2.5M12 19.5V22M4.93 4.93 6.7 6.7M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07 6.7 17.3M17.3 6.7l1.77-1.77" /></svg>
+        </button>
+        <button
+          type="button"
+          aria-label="Gunakan mode gelap"
+          title="Dark mode"
+          :class="{ active: theme === 'dark' }"
+          :aria-pressed="theme === 'dark'"
+          @click="emit('update:theme', 'dark')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 15.2A8.5 8.5 0 0 1 8.8 3.4a8.5 8.5 0 1 0 11.8 11.8Z" /></svg>
+        </button>
+      </div>
     </header>
 
     <div class="sidebar-content">
@@ -106,22 +131,28 @@ const emit = defineEmits<{
 
 <style scoped>
 .sidebar { position: relative; z-index: 20; display: flex; min-width: 0; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--border); }
-.brand-bar { display: flex; min-height: 78px; align-items: center; gap: 18px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-.brand-logo { width: 48px; height: auto; flex: 0 0 auto; filter: brightness(0) saturate(100%) invert(87%) sepia(21%) saturate(630%) hue-rotate(351deg) brightness(97%) contrast(98%); }
+.brand-bar { display: flex; min-height: 78px; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.brand-logo { width: 44px; height: auto; flex: 0 0 auto; filter: var(--logo-filter); }
+.brand-copy { min-width: 0; flex: 1 1 auto; }
 h1, p { margin: 0; }
 h1 { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.4; }
 .brand-bar p { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.sidebar-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #434936 transparent; }
+.theme-control { display: flex; flex: 0 0 auto; align-self: flex-start; gap: 1px; margin-top: 2px; padding: 1px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 5px; }
+.theme-control button { display: grid; width: 22px; height: 22px; padding: 0; place-items: center; color: var(--muted); background: transparent; border: 0; border-radius: 3px; cursor: pointer; }
+.theme-control button:hover, .theme-control button:focus-visible { color: var(--text); background: var(--surface-hover); outline: 0; }
+.theme-control button.active { color: var(--accent-strong); background: var(--accent-surface); }
+.theme-control svg { width: 13px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.sidebar-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 .source-status { display: flex; align-items: flex-start; gap: 8px; padding: 18px 20px; }
-.source-status > span { width: 6px; height: 6px; flex: 0 0 auto; margin-top: 3px; background: #9db361; border-radius: 50%; }
-.source-status > span.error { background: #c96a56; }
-.source-status p { color: #777d6e; font-size: 9px; line-height: 1.5; }
+.source-status > span { width: 6px; height: 6px; flex: 0 0 auto; margin-top: 3px; background: var(--success); border-radius: 50%; }
+.source-status > span.error { background: var(--error); }
+.source-status p { color: var(--muted-faint); font-size: 9px; line-height: 1.5; }
 .panel-close { display: none; }
 
 @media (max-width: 760px) {
-  .sidebar { position: fixed; inset: 0 auto 0 0; width: min(324px, calc(100vw - 42px)); transform: translateX(-100%); transition: transform 180ms ease; box-shadow: 8px 0 24px rgba(0, 0, 0, 0.35); }
+  .sidebar { position: fixed; inset: 0 auto 0 0; width: min(324px, calc(100vw - 42px)); transform: translateX(-100%); transition: transform 180ms ease; box-shadow: 8px 0 24px var(--shadow-strong); }
   .sidebar.is-open { transform: translateX(0); }
-  .panel-close { display: grid; width: 32px; height: 32px; margin-left: auto; place-items: center; color: inherit; background: transparent; border: 1px solid #3d4334; border-radius: 6px; }
+  .panel-close { display: grid; width: 32px; height: 32px; margin-left: 0; place-items: center; color: var(--muted-strong); background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; }
   .panel-close svg { width: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.7; }
 }
 </style>

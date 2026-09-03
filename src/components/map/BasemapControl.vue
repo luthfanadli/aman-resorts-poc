@@ -81,16 +81,16 @@ onBeforeUnmount(() => {
   height: 36px;
   padding: 0;
   place-items: center;
-  color: #e8e7db;
-  background: #171a14;
-  border: 1px solid #3e4435;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 2px 8px var(--shadow);
   cursor: pointer;
 }
 
 .basemap-trigger:hover {
-  background: #20241c;
+  background: var(--surface-hover);
 }
 
 .basemap-trigger svg {
@@ -108,11 +108,11 @@ onBeforeUnmount(() => {
   bottom: 44px;
   width: 222px;
   padding: 11px;
-  color: #e7e6da;
-  background: #171a14;
-  border: 1px solid #454b3b;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 4px 14px var(--shadow);
 }
 
 .basemap-heading {
@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
   height: 23px;
   padding: 0;
   place-items: center;
-  color: #929787;
+  color: var(--muted);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -159,28 +159,28 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 5px;
   padding: 4px;
-  color: #a8ad9d;
+  color: var(--muted);
   background: transparent;
-  border: 1px solid #353a2f;
+  border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
 }
 
 .basemap-option:hover {
-  border-color: #626753;
+  border-color: var(--border-strong);
 }
 
 .basemap-option.active {
-  color: #f0dfac;
-  border-color: #c6a953;
-  box-shadow: inset 0 0 0 1px #c6a953;
+  color: var(--accent-strong);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .basemap-preview {
   width: 100%;
   height: 58px;
-  background-color: #2b3027;
+  background-color: var(--surface-hover);
   background-position: center;
   background-size: cover;
   border-radius: 3px;

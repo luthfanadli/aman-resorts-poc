@@ -45,15 +45,15 @@ const parcelsByRightType = computed(() => {
 </template>
 
 <style scoped>
-.summary { background: #10120e; border-bottom: 1px solid var(--border); }
-.summary-metrics { display: grid; grid-template-columns: 0.8fr 1.2fr auto; gap: 1px; padding: 0 20px; background: #10120e; }
-.summary-metrics > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 15px 14px; background: #10120e; }
+.summary { background: var(--app-background); border-bottom: 1px solid var(--border); }
+.summary-metrics { display: grid; grid-template-columns: 0.8fr 1.2fr auto; gap: 1px; padding: 0 20px; background: var(--app-background); }
+.summary-metrics > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 15px 14px; background: var(--app-background); }
 .summary-metrics > div:first-child { padding-left: 0; }
 span { color: var(--muted); font-size: 10px; }
-strong { overflow: hidden; color: #f0efdf; font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.details-trigger { display: flex; width: 58px; align-items: center; justify-content: center; gap: 3px; padding: 0 0 0 10px; color: #c6c9b7; background: #10120e; border: 0; border-left: 1px solid var(--border); cursor: pointer; text-align: left; }
-.details-trigger:hover, .details-trigger:focus-visible { color: #f2dd91; background: #171b14; outline: 0; }
-.details-trigger:disabled { color: #606554; cursor: not-allowed; }
+strong { overflow: hidden; color: var(--text); font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.details-trigger { display: flex; width: 58px; align-items: center; justify-content: center; gap: 3px; padding: 0 0 0 10px; color: var(--muted-strong); background: var(--app-background); border: 0; border-left: 1px solid var(--border); cursor: pointer; text-align: left; }
+.details-trigger:hover, .details-trigger:focus-visible { color: var(--accent-strong); background: var(--surface-hover); outline: 0; }
+.details-trigger:disabled { color: var(--muted-faint); cursor: not-allowed; }
 .details-trigger span { color: inherit; font-size: 9px; font-weight: 600; line-height: 1.35; }
 .details-trigger svg { width: 13px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ParcelMap from './components/map/ParcelMap.vue'
 import MapSidebar from './components/sidebar/MapSidebar.vue'
 import { useBuildingData } from './composables/useBuildingData'
@@ -11,6 +11,7 @@ import type {
   MapRenderStats,
   ParcelMapApi,
 } from './types/parcel'
+import type { ThemeMode } from './types/theme'
 
 const { collection, isLoading, error: dataError } = useParcelData(parcelDataUrl)
 const {
@@ -28,6 +29,8 @@ const parcelFillOpacity = ref(0.58)
 const parcelStrokeOpacity = ref(1)
 const buildingFillOpacity = ref(0.72)
 const buildingStrokeOpacity = ref(1)
+const savedTheme = window.localStorage.getItem('amandari-land-map-theme')
+const theme = ref<ThemeMode>(savedTheme === 'light' ? 'light' : 'dark')
 const mobilePanelOpen = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
@@ -44,6 +47,11 @@ const selectedBuilding = computed<BuildingFeature | null>(() =>
 
 const visibleError = computed(() => dataError.value || buildingDataError.value || mapError.value)
 const dataLoading = computed(() => isLoading.value || buildingsLoading.value)
+
+watch(theme, (mode) => {
+  document.documentElement.dataset.theme = mode
+  window.localStorage.setItem('amandari-land-map-theme', mode)
+}, { immediate: true })
 
 function selectParcel(parcelId: number, focus = false) {
   selectedBuildingId.value = null
@@ -93,11 +101,13 @@ function handleMapReady(featureCount: number) {
       :render-stats="renderStats"
       :selected-building="selectedBuilding"
       :selected-parcel="selectedParcel"
+      :theme="theme"
       @close="mobilePanelOpen = false"
       @reset="resetView"
       @select="selectParcel($event, true)"
       @toggle-buildings="buildingsVisible = !buildingsVisible"
       @toggle-parcels="parcelsVisible = !parcelsVisible"
+      @update:theme="theme = $event"
       @update:building-fill-opacity="buildingFillOpacity = $event"
       @update:building-stroke-opacity="buildingStrokeOpacity = $event"
       @update:parcel-fill-opacity="parcelFillOpacity = $event"
@@ -117,6 +127,7 @@ function handleMapReady(featureCount: number) {
       :parcel-stroke-opacity="parcelStrokeOpacity"
       :selected-building-id="selectedBuildingId"
       :selected-parcel-id="selectedParcelId"
+      :theme="theme"
       @error="mapError = $event"
       @clear-selection="clearSelection"
       @open-panel="mobilePanelOpen = true"
@@ -139,7 +150,7 @@ function handleMapReady(featureCount: number) {
   grid-template-columns: 324px minmax(0, 1fr);
   width: 100%;
   height: 100%;
-  background: #10120e;
+  background: var(--app-background);
 }
 
 .map-placeholder {
@@ -147,16 +158,16 @@ function handleMapReady(featureCount: number) {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #c8cbbd;
-  background: #20241d;
+  color: var(--muted-strong);
+  background: var(--surface-elevated);
   font-size: 12px;
 }
 
 .map-placeholder span {
   width: 12px;
   height: 12px;
-  border: 2px solid #575d4e;
-  border-top-color: #e0bd68;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 700ms linear infinite;
 }

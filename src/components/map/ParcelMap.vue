@@ -5,16 +5,15 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import BasemapControl from './BasemapControl.vue'
 import {
   BASEMAP_OPTIONS,
-  BUILDING_COLOR,
   GOOGLE_IMAGERY_TILES,
   HUMANITARIAN_TILES,
+  MAP_THEME_COLORS,
   MAP_LAYER,
   MAP_SOURCE,
   OPEN_FREE_MAP_DARK_STYLE_URL,
   OPEN_FREE_MAP_GLYPHS_URL,
   OPEN_FREE_MAP_SPRITE_URL,
   OPENSTREETMAP_TILES,
-  PARCEL_COLOR,
 } from '../../lib/map/constants'
 import type { BasemapId } from '../../lib/map/constants'
 import { getCollectionBounds, getFeatureBounds } from '../../lib/map/geometry'
@@ -26,6 +25,7 @@ import type {
   ParcelFeature,
   ParcelMapApi,
 } from '../../types/parcel'
+import type { ThemeMode } from '../../types/theme'
 
 const props = defineProps<{
   buildingCollection: BuildingCollection
@@ -38,6 +38,7 @@ const props = defineProps<{
   parcelsVisible: boolean
   selectedBuildingId: number | null
   selectedParcelId: number | null
+  theme: ThemeMode
 }>()
 
 const emit = defineEmits<{
@@ -190,6 +191,37 @@ function syncOpacity() {
   }
   if (map.getLayer(MAP_LAYER.buildingOutline)) {
     map.setPaintProperty(MAP_LAYER.buildingOutline, 'line-opacity', props.buildingStrokeOpacity)
+  }
+}
+
+function syncTheme() {
+  if (!map) return
+  const colors = MAP_THEME_COLORS[props.theme]
+
+  if (map.getLayer(MAP_LAYER.googleImagery)) {
+    map.setPaintProperty(
+      MAP_LAYER.googleImagery,
+      'raster-brightness-max',
+      props.theme === 'light' ? 1 : 0.78,
+    )
+  }
+  if (map.getLayer(MAP_LAYER.parcelFill)) {
+    map.setPaintProperty(MAP_LAYER.parcelFill, 'fill-color', colors.parcelFill)
+  }
+  if (map.getLayer(MAP_LAYER.parcelOutline)) {
+    map.setPaintProperty(MAP_LAYER.parcelOutline, 'line-color', colors.parcelOutline)
+  }
+  if (map.getLayer(MAP_LAYER.parcelSelected)) {
+    map.setPaintProperty(MAP_LAYER.parcelSelected, 'line-color', colors.selection)
+  }
+  if (map.getLayer(MAP_LAYER.buildingFill)) {
+    map.setPaintProperty(MAP_LAYER.buildingFill, 'fill-color', colors.buildingFill)
+  }
+  if (map.getLayer(MAP_LAYER.buildingOutline)) {
+    map.setPaintProperty(MAP_LAYER.buildingOutline, 'line-color', colors.buildingOutline)
+  }
+  if (map.getLayer(MAP_LAYER.buildingSelected)) {
+    map.setPaintProperty(MAP_LAYER.buildingSelected, 'line-color', colors.selection)
   }
 }
 
@@ -383,6 +415,7 @@ function initializeMap() {
   if (!mapContainer.value) return
   const parcelData = cloneParcelCollection()
   const buildingData = cloneBuildingCollection()
+  const themeColors = MAP_THEME_COLORS[props.theme]
 
   try {
     // MapLibre v6's ESM worker must be bundled explicitly by Vite. Without
@@ -440,7 +473,7 @@ function initializeMap() {
             paint: {
               'raster-saturation': -0.16,
               'raster-contrast': 0.08,
-              'raster-brightness-max': 0.78,
+              'raster-brightness-max': props.theme === 'light' ? 1 : 0.78,
               'raster-fade-duration': 0,
             },
           },
@@ -463,7 +496,7 @@ function initializeMap() {
             type: 'fill',
             source: MAP_SOURCE.parcels,
             paint: {
-              'fill-color': PARCEL_COLOR,
+              'fill-color': themeColors.parcelFill,
               'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'hover'], false],
@@ -477,7 +510,7 @@ function initializeMap() {
             type: 'line',
             source: MAP_SOURCE.parcels,
             paint: {
-              'line-color': '#ffffff',
+              'line-color': themeColors.parcelOutline,
               'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.5, 19, 3],
               'line-opacity': props.parcelStrokeOpacity,
             },
@@ -487,7 +520,7 @@ function initializeMap() {
             type: 'fill',
             source: MAP_SOURCE.buildings,
             paint: {
-              'fill-color': BUILDING_COLOR,
+              'fill-color': themeColors.buildingFill,
               'fill-opacity': props.buildingFillOpacity,
             },
           },
@@ -496,7 +529,7 @@ function initializeMap() {
             type: 'line',
             source: MAP_SOURCE.buildings,
             paint: {
-              'line-color': '#e8804c',
+              'line-color': themeColors.buildingOutline,
               'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.2, 19, 2.5],
               'line-opacity': props.buildingStrokeOpacity,
             },
@@ -507,7 +540,7 @@ function initializeMap() {
             source: MAP_SOURCE.buildings,
             filter: ['==', ['get', '__mapFeatureId'], -1],
             paint: {
-              'line-color': '#ffe36b',
+              'line-color': themeColors.selection,
               'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2, 19, 4],
               'line-opacity': props.buildingStrokeOpacity,
             },
@@ -518,7 +551,7 @@ function initializeMap() {
             source: MAP_SOURCE.parcels,
             filter: ['==', ['get', 'OBJECTID'], -1],
             paint: {
-              'line-color': '#ffe36b',
+              'line-color': themeColors.selection,
               'line-width': 5,
               'line-opacity': props.parcelStrokeOpacity,
             },
@@ -545,6 +578,7 @@ function initializeMap() {
       syncBasemap()
       syncVisibility()
       syncOpacity()
+      syncTheme()
       syncSelection()
       fitAll()
     })
@@ -592,6 +626,7 @@ watch(() => props.parcelFillOpacity, syncOpacity)
 watch(() => props.parcelStrokeOpacity, syncOpacity)
 watch(() => props.buildingFillOpacity, syncOpacity)
 watch(() => props.buildingStrokeOpacity, syncOpacity)
+watch(() => props.theme, syncTheme)
 watch(() => props.selectedBuildingId, syncSelection)
 watch(() => props.selectedParcelId, syncSelection)
 
@@ -631,7 +666,7 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.map-canvas { background: #20241d; }
+.map-canvas { background: var(--surface-elevated); }
 
 .map-message {
   position: absolute;
@@ -643,9 +678,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 9px;
   padding: 9px 12px;
-  color: #dedfd2;
-  background: rgba(22, 25, 19, 0.94);
-  border: 1px solid #434938;
+  color: var(--text-soft);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 11px;
 }
@@ -653,30 +688,30 @@ onBeforeUnmount(() => {
 .map-message > span {
   width: 11px;
   height: 11px;
-  border: 2px solid #575d4e;
-  border-top-color: #e0bd68;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: map-spin 700ms linear infinite;
 }
 
-.map-error { color: #f3b6a6; }
+.map-error { color: var(--error-text); }
 @keyframes map-spin { to { transform: rotate(360deg); } }
 
 .maplibregl-ctrl-top-right { top: 12px; right: 12px; }
-.maplibregl-ctrl-group { overflow: hidden; background: #171a14; border: 1px solid #3e4435; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24); }
+.maplibregl-ctrl-group { overflow: hidden; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 6px; box-shadow: 0 2px 8px var(--shadow); }
 .maplibregl-ctrl-group button { width: 34px; height: 34px; }
-.maplibregl-ctrl-group button + button { border-top-color: #353a2e; }
-.maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(92%) sepia(10%) saturate(311%); }
-.maplibregl-ctrl-scale { color: #f1efe2; background: rgba(19, 22, 17, 0.75); border-color: #e5e2d3; font-family: 'Manrope', sans-serif; font-size: 9px; }
-.maplibregl-popup-content { padding: 0; color: #e9e9dc; background: #1a1e17; border: 1px solid #4a503e; border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32); }
-.maplibregl-popup-close-button { width: 28px; height: 28px; color: #c9cdbd; font-size: 17px; line-height: 24px; }
-.maplibregl-popup-close-button:hover { color: #fff5ca; background: #2b3026; }
-.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #4a503e; }
-.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #4a503e; }
+.maplibregl-ctrl-group button + button { border-top-color: var(--border); }
+.maplibregl-ctrl button .maplibregl-ctrl-icon { filter: var(--map-control-icon-filter); }
+.maplibregl-ctrl-scale { color: var(--text); background: var(--map-scale-background); border-color: var(--text-soft); font-family: 'Manrope', sans-serif; font-size: 9px; }
+.maplibregl-popup-content { padding: 0; color: var(--text); background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 6px; box-shadow: 0 4px 14px var(--shadow-strong); }
+.maplibregl-popup-close-button { width: 28px; height: 28px; color: var(--muted-strong); font-size: 17px; line-height: 24px; }
+.maplibregl-popup-close-button:hover { color: var(--accent-hover); background: var(--surface-hover); }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface-raised); }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--surface-raised); }
 .parcel-popup { display: flex; min-width: 175px; flex-direction: column; gap: 4px; padding: 11px 13px; }
-.parcel-popup strong { color: #f0d98d; font-size: 12px; }
-.parcel-popup span { color: #a9ae9d; font-family: 'Manrope', sans-serif; font-size: 9px; }
-.building-popup strong { padding-right: 20px; color: #e5baa4; }
+.parcel-popup strong { color: var(--accent-strong); font-size: 12px; }
+.parcel-popup span { color: var(--muted); font-family: 'Manrope', sans-serif; font-size: 9px; }
+.building-popup strong { padding-right: 20px; color: var(--building-accent); }
 
 .mobile-panel-button { display: none; }
 
@@ -691,11 +726,11 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 8px;
     padding: 0 12px;
-    color: #ecebdc;
-    background: #171a14;
-    border: 1px solid #3e4435;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+    box-shadow: 0 2px 8px var(--shadow);
     font-size: 11px;
     font-weight: 600;
   }

@@ -2,16 +2,93 @@
 
 :root {
   font-family: 'Manrope', sans-serif;
-  color: #ecebdc;
-  background: #10120e;
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  --app-background: #10120e;
   --sidebar: #171a14;
+  --surface: #171a14;
+  --surface-raised: #1a1e17;
+  --surface-subtle: #11140f;
+  --surface-hover: #2a2f24;
+  --surface-elevated: #20241c;
   --border: #343a2d;
+  --border-strong: #434936;
+  --border-subtle: #2c3127;
   --text: #ecebdc;
+  --text-soft: #dedfd2;
   --muted: #9fa492;
+  --muted-strong: #c9cbbd;
+  --muted-faint: #777d6e;
+  --accent: #d8be76;
+  --accent-strong: #f0d98d;
+  --accent-light: #e6d18f;
+  --accent-hover: #fff5ca;
+  --accent-surface: #23271f;
+  --building-accent: #e5baa4;
+  --parcel-fill: #d6b454;
+  --parcel-outline: #ffffff;
+  --building-fill: #9b6b54;
+  --building-outline: #e8804c;
+  --selection: #ffe36b;
+  --error: #c96a56;
+  --error-text: #f3b6a6;
+  --success: #9db361;
+  --scrollbar-thumb: #d8be76;
+  --scrollbar-track: #10120e;
+  --backdrop: rgba(5, 7, 4, 0.72);
+  --shadow: rgba(0, 0, 0, 0.28);
+  --shadow-strong: rgba(0, 0, 0, 0.38);
+  --map-scale-background: rgba(19, 22, 17, 0.75);
+  --map-control-icon-filter: invert(92%) sepia(10%) saturate(311%);
+  --logo-filter: brightness(0) saturate(100%) invert(87%) sepia(21%) saturate(630%) hue-rotate(351deg) brightness(97%) contrast(98%);
 }
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --app-background: #eef0e7;
+  --sidebar: #fafaf4;
+  --surface: #fafaf4;
+  --surface-raised: #f2f3ea;
+  --surface-subtle: #ffffff;
+  --surface-hover: #e9eadf;
+  --surface-elevated: #f5f6ef;
+  --border: #c9cdbd;
+  --border-strong: #b9beab;
+  --border-subtle: #d9ddd0;
+  --text: #273024;
+  --text-soft: #3b4535;
+  --muted: #66705f;
+  --muted-strong: #535d4e;
+  --muted-faint: #727b6c;
+  --accent: #92731c;
+  --accent-strong: #6f5310;
+  --accent-light: #b69132;
+  --accent-hover: #4f3e0d;
+  --accent-surface: #ede5ca;
+  --building-accent: #8f492e;
+  --parcel-fill: #c99f33;
+  --parcel-outline: #545326;
+  --building-fill: #aa765f;
+  --building-outline: #a64c2e;
+  --selection: #755f10;
+  --error: #b34c3b;
+  --error-text: #8c392d;
+  --success: #6d8a43;
+  --scrollbar-thumb: #9f862f;
+  --scrollbar-track: #e3e5db;
+  --backdrop: rgba(23, 29, 19, 0.4);
+  --shadow: rgba(31, 38, 27, 0.16);
+  --shadow-strong: rgba(31, 38, 27, 0.22);
+  --map-scale-background: rgba(250, 250, 244, 0.84);
+  --map-control-icon-filter: none;
+  --logo-filter: brightness(0) saturate(100%) invert(25%) sepia(12%) saturate(1250%) hue-rotate(43deg) brightness(94%) contrast(88%);
+}
+
+html { color: var(--text); background: var(--app-background); }
+body { color: var(--text); background: var(--app-background); }
 
 * { box-sizing: border-box; }
 html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; }
