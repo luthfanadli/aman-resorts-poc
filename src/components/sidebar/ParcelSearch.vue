@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { formatArea, parcelLabel } from '../../lib/parcel'
+import { formatArea } from '../../lib/parcel'
 import type { ParcelFeature } from '../../types/parcel'
 
 const props = defineProps<{
@@ -21,11 +21,7 @@ const results = computed(() => {
     .filter(({ properties }) =>
       [
         properties.NIB,
-        properties.NIBNIBEL,
-        properties.NAMA,
         properties.TIPEHAK,
-        properties.KELURAHAN,
-        properties.KECAMATAN,
       ].some((value) => String(value ?? '').toLocaleLowerCase('id').includes(needle)),
     )
     .slice(0, 7)
@@ -46,15 +42,27 @@ function select(parcelId: number) {
         id="parcel-search"
         v-model="query"
         type="search"
-        placeholder="NIB, nama, atau tipe hak"
+        placeholder="Cari berdasarkan NIB atau tipe hak"
         autocomplete="off"
         :disabled="disabled"
       />
     </div>
     <div v-if="results.length" class="search-results">
       <button v-for="feature in results" :key="feature.id" type="button" @click="select(feature.id)">
-        <span>{{ parcelLabel(feature.properties) }}</span>
-        <em>{{ formatArea(feature.properties.LUASPETA) }}</em>
+        <dl>
+          <div>
+            <dt>NIB</dt>
+            <dd>{{ feature.properties.NIB || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Tipe hak</dt>
+            <dd>{{ feature.properties.TIPEHAK || '—' }}</dd>
+          </div>
+        </dl>
+        <div class="result-area">
+          <span>Luas tertulis</span>
+          <strong>{{ formatArea(feature.properties.LUASTERTUL) }}</strong>
+        </div>
       </button>
     </div>
     <p v-else-if="query.trim() && !disabled" class="empty-search">Bidang tidak ditemukan.</p>
@@ -71,10 +79,13 @@ input { width: 100%; min-width: 0; padding: 0; color: var(--text); background: t
 input::placeholder { color: #717665; }
 input:disabled { cursor: wait; }
 .search-results { position: absolute; z-index: 10; top: 88px; right: 20px; left: 20px; overflow: hidden; background: #20241c; border: 1px solid #414735; border-radius: 7px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
-.search-results button { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: inherit; background: transparent; border: 0; border-bottom: 1px solid #363b2e; cursor: pointer; text-align: left; }
+.search-results button { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 10px 12px; color: inherit; background: transparent; border: 0; border-bottom: 1px solid #363b2e; cursor: pointer; text-align: left; }
 .search-results button:last-child { border-bottom: 0; }
 .search-results button:hover, .search-results button:focus-visible { background: #2a2f24; outline: 0; }
-.search-results span { font-size: 12px; font-weight: 600; }
-.search-results em { color: var(--muted); font-size: 10px; font-style: normal; white-space: nowrap; }
+.search-results dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; margin: 0; }
+.search-results dt, .result-area span { display: block; margin-bottom: 3px; color: #858b78; font-size: 9px; line-height: 1.25; }
+.search-results dd { min-width: 0; margin: 0; color: #e1e3d5; font-size: 11px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.result-area { min-width: 72px; text-align: right; }
+.result-area strong { display: block; color: #c5c9b8; font-size: 10px; font-weight: 500; line-height: 1.35; white-space: nowrap; }
 .empty-search { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
 </style>
