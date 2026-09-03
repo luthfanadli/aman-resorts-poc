@@ -38,6 +38,7 @@ const emit = defineEmits<{
   select: [parcelId: number]
   toggleBuildings: []
   toggleParcels: []
+  'manage-rooms': []
   'update:theme': [theme: ThemeMode]
   'update:buildingFillOpacity': [value: number]
   'update:buildingStrokeOpacity': [value: number]
@@ -112,6 +113,7 @@ const emit = defineEmits<{
         v-else-if="selectedBuilding"
         :building="selectedBuilding"
         @close="emit('reset')"
+        @manage-rooms="emit('manage-rooms')"
       />
 
       <div class="source-status">

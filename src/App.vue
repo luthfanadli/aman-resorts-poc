@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import ParcelMap from './components/map/ParcelMap.vue'
 import MapSidebar from './components/sidebar/MapSidebar.vue'
+import BuildingModal from './components/building/BuildingModal.vue'
 import { useBuildingData } from './composables/useBuildingData'
 import { useParcelData } from './composables/useParcelData'
 import buildingDataUrl from './assets/data/Bangunan.geojson?url'
@@ -35,6 +36,7 @@ const mobilePanelOpen = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
 const renderStats = ref<MapRenderStats>({ sourceFeatures: 0, renderedFeatures: 0 })
+const buildingModalOpen = ref(false)
 
 const selectedParcel = computed(() =>
   collection.value?.features.find((feature) => feature.id === selectedParcelId.value) ?? null,
@@ -64,6 +66,14 @@ function selectBuilding(buildingId: number) {
   selectedParcelId.value = null
   selectedBuildingId.value = buildingId
   if (window.innerWidth <= 760) mobilePanelOpen.value = false
+}
+
+function openBuildingModal() {
+  if (selectedBuildingId.value !== null) buildingModalOpen.value = true
+}
+
+function closeBuildingModal() {
+  buildingModalOpen.value = false
 }
 
 function clearSelection() {
@@ -107,6 +117,7 @@ function handleMapReady(featureCount: number) {
       @select="selectParcel($event, true)"
       @toggle-buildings="buildingsVisible = !buildingsVisible"
       @toggle-parcels="parcelsVisible = !parcelsVisible"
+      @manage-rooms="openBuildingModal"
       @update:theme="theme = $event"
       @update:building-fill-opacity="buildingFillOpacity = $event"
       @update:building-stroke-opacity="buildingStrokeOpacity = $event"
@@ -141,6 +152,13 @@ function handleMapReady(featureCount: number) {
       <span v-if="dataLoading"></span>
       {{ visibleError || 'Membaca data peta…' }}
     </section>
+
+    <BuildingModal
+      v-if="buildingModalOpen && selectedBuilding && selectedBuildingId !== null"
+      :building="selectedBuilding"
+      :building-id="String(selectedBuildingId)"
+      @close="closeBuildingModal"
+    />
   </main>
 </template>
 
