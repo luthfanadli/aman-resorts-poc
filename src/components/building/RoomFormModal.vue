@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import type { Room, RoomDraft, RoomStatus, RoomType } from '../../types/room'
+import RoomPhotoGalleryModal from './RoomPhotoGalleryModal.vue'
 
 const props = defineProps<{
   buildingId: string
@@ -13,11 +14,14 @@ const emit = defineEmits<{
 }>()
 
 const ROOM_TYPES: RoomType[] = [
-  'Meeting Room', 'Office', 'Storage', 'Lobby', 'Reception',
+  'Meeting Room', 'Guest Room', 'Office', 'Storage', 'Lobby', 'Reception',
   'Dining', 'Kitchen', 'Bathroom', 'Corridor', 'Server Room',
   'Security Room', 'Other',
 ]
 const STATUSES: RoomStatus[] = ['Active', 'Inactive', 'Renovation']
+const showGallery = ref(false)
+const uploadingPhotos = ref(false)
+const photoError = ref('')
 
 function blankDraft(): RoomDraft {
   return {
@@ -31,7 +35,7 @@ function blankDraft(): RoomDraft {
     capacity: null,
     status: 'Active',
     responsibleUnit: '',
-    photo: '',
+    photos: [],
     floorPlan: '',
     notes: '',
   }
@@ -43,7 +47,7 @@ watch(
   () => props.room,
   (r) => {
     if (r) {
-      Object.assign(form, { ...r })
+      Object.assign(form, { ...r, photos: [...r.photos] })
     } else {
       Object.assign(form, blankDraft())
     }
@@ -51,12 +55,31 @@ watch(
   { immediate: true },
 )
 
-function handlePhotoUpload(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = (ev) => { form.photo = (ev.target?.result as string) ?? '' }
-  reader.readAsDataURL(file)
+async function handlePhotoUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  if (!files.length) return
+
+  uploadingPhotos.value = true
+  photoError.value = ''
+  try {
+    const photos = await Promise.all(files.map((file) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result ?? ''))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })))
+    form.photos.push(...photos.filter(Boolean))
+  } catch {
+    photoError.value = 'Sebagian foto gagal dibaca. Silakan pilih ulang.'
+  } finally {
+    input.value = ''
+    uploadingPhotos.value = false
+  }
+}
+
+function removePhoto(index: number) {
+  form.photos.splice(index, 1)
 }
 
 function submit() {
@@ -140,11 +163,30 @@ function submit() {
         <div class="form-section">
           <h3 class="section-label">Dokumentasi</h3>
           <div class="form-grid">
-            <label class="field full">
-              <span>Photo Ruangan</span>
-              <input type="file" accept="image/*" @change="handlePhotoUpload" />
-              <img v-if="form.photo" :src="form.photo" class="photo-preview" alt="Preview" />
-            </label>
+            <div class="field full">
+              <label for="room-photo-input">Photo Ruangan</label>
+              <input id="room-photo-input" type="file" accept="image/*" multiple @change="handlePhotoUpload" />
+              <span class="field-hint">Pilih beberapa foto sekaligus. Anda juga dapat menambah foto secara bertahap.</span>
+              <span v-if="photoError" class="photo-error" role="alert">{{ photoError }}</span>
+              <div v-if="form.photos.length" class="photo-grid" :class="`count-${Math.min(form.photos.length, 3)}`">
+                <div v-for="(photo, index) in form.photos.slice(0, 3)" :key="`${photo.slice(-24)}-${index}`" class="photo-tile">
+                  <img :src="photo" :alt="`Preview ruangan ${index + 1}`" />
+                  <button type="button" class="remove-photo" :aria-label="`Hapus foto ${index + 1}`" @click="removePhoto(index)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                  </button>
+                  <button
+                    v-if="index === 2"
+                    type="button"
+                    class="view-all-overlay"
+                    @click="showGallery = true"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+                    Lihat semua foto
+                    <span>{{ form.photos.length }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
             <label class="field full">
               <span>Floor Plan / Spatial Data</span>
               <textarea v-model="form.floorPlan" rows="2" placeholder="Polygon / koordinat / keterangan layout" />
@@ -158,10 +200,18 @@ function submit() {
 
         <footer class="form-footer">
           <button type="button" class="btn-secondary" @click="emit('cancel')">Batal</button>
-          <button type="submit" class="btn-primary">{{ room ? 'Simpan Perubahan' : 'Tambah Room' }}</button>
+          <button type="submit" class="btn-primary" :disabled="uploadingPhotos">
+            {{ uploadingPhotos ? 'Memproses foto...' : room ? 'Simpan Perubahan' : 'Tambah Room' }}
+          </button>
         </footer>
       </form>
     </div>
+    <RoomPhotoGalleryModal
+      v-if="showGallery"
+      :photos="form.photos"
+      :room-name="form.name || 'Room baru'"
+      @close="showGallery = false"
+    />
   </div>
 </template>
 
@@ -257,7 +307,8 @@ function submit() {
   gap: 5px;
 }
 .field.full { grid-column: 1 / -1; }
-.field > span {
+.field > span,
+.field > label {
   font-size: 10px;
   color: var(--muted);
   font-weight: 500;
@@ -295,13 +346,28 @@ function submit() {
   font-size: 10px;
   cursor: pointer;
 }
-.photo-preview {
-  margin-top: 8px;
-  max-height: 100px;
-  border-radius: 6px;
-  border: 1px solid var(--border-strong);
-  object-fit: cover;
+.field-hint { color: var(--muted-faint) !important; font-size: 9px !important; font-weight: 400 !important; }
+.photo-error { color: var(--error-text) !important; font-size: 9px !important; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; }
+.photo-grid.count-1 { grid-template-columns: 1fr; }
+.photo-grid.count-2 { grid-template-columns: repeat(2, 1fr); }
+.photo-tile { position: relative; min-width: 0; height: 112px; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface-subtle); }
+.photo-tile img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.remove-photo {
+  position: absolute; top: 5px; right: 5px; z-index: 2; display: grid; width: 24px; height: 24px;
+  place-items: center; color: #fff; background: rgba(5, 7, 4, 0.72); border: 0; border-radius: 4px; cursor: pointer;
 }
+.remove-photo:hover { background: var(--error); }
+.remove-photo svg { width: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 2; }
+.view-all-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 12px; color: #fff; background: rgba(5, 7, 4, 0.56); border: 0; font-size: 10px;
+  font-weight: 700; cursor: pointer;
+}
+.view-all-overlay:hover { background: rgba(5, 7, 4, 0.66); }
+.view-all-overlay svg { width: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.view-all-overlay span { font-size: 9px; font-weight: 500; opacity: 0.82; }
+.view-all-overlay + .remove-photo { z-index: 3; }
 
 .form-footer {
   display: flex;
@@ -324,6 +390,7 @@ function submit() {
   transition: all 150ms;
 }
 .btn-primary:hover { background: var(--accent-light); }
+.btn-primary:disabled { cursor: wait; opacity: 0.58; }
 .btn-secondary {
   padding: 9px 16px;
   background: transparent;
@@ -336,4 +403,9 @@ function submit() {
   transition: all 150ms;
 }
 .btn-secondary:hover { background: var(--surface-hover); color: var(--text); }
+
+@media (max-width: 520px) {
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .photo-tile { height: 96px; }
+}
 </style>

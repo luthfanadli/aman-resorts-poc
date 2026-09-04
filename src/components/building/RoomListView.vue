@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { useRoomStore } from '../../composables/useRoomStore'
 import { useAssetStore } from '../../composables/useAssetStore'
 import RoomFormModal from './RoomFormModal.vue'
+import RoomDetailModal from './RoomDetailModal.vue'
+import RoomPhotoGalleryModal from './RoomPhotoGalleryModal.vue'
 import AssetListView from './AssetListView.vue'
 import type { Room, RoomDraft } from '../../types/room'
 
@@ -18,6 +20,9 @@ const showForm = ref(false)
 const editingRoom = ref<Room | null>(null)
 const confirmDeleteId = ref<string | null>(null)
 const activeRoomForAssets = ref<Room | null>(null)
+const detailRoom = ref<Room | null>(null)
+const galleryRoom = ref<Room | null>(null)
+const galleryIndex = ref(0)
 const searchQuery = ref('')
 
 const filteredRooms = computed(() => {
@@ -54,6 +59,11 @@ function handleSave(draft: RoomDraft) {
 }
 function openAssets(r: Room) { activeRoomForAssets.value = r }
 function backFromAssets() { activeRoomForAssets.value = null }
+function openDetail(room: Room) { detailRoom.value = room }
+function openGallery(room: Room, index = 0) {
+  galleryRoom.value = room
+  galleryIndex.value = index
+}
 
 function confirmDelete(id: string) { confirmDeleteId.value = id }
 function cancelDelete() { confirmDeleteId.value = null }
@@ -156,6 +166,24 @@ function statusBackground(status: string) {
             </span>
           </div>
 
+          <div v-if="room.photos.length" class="card-photos" :class="`count-${Math.min(room.photos.length, 3)}`">
+            <button
+              v-for="(photo, index) in room.photos.slice(0, 3)"
+              :key="`${photo.slice(-24)}-${index}`"
+              type="button"
+              class="card-photo"
+              :aria-label="index === 2 ? 'Lihat semua foto' : `Lihat foto ${index + 1}`"
+              @click="openGallery(room, index)"
+            >
+              <img :src="photo" :alt="`${room.name}, foto ${index + 1}`" />
+              <span v-if="index === 2" class="card-photo-overlay">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+                Lihat semua
+                <small>+{{ room.photos.length - 2 }}</small>
+              </span>
+            </button>
+          </div>
+
           <div class="card-meta">
             <span class="meta-item">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
@@ -188,6 +216,9 @@ function statusBackground(status: string) {
             <span class="asset-count">{{ assetCountForRoom(room.id) }}</span>
           </button>
           <div class="card-actions">
+            <button type="button" class="icon-btn detail" title="Lihat detail room" aria-label="Lihat detail room" @click="openDetail(room)">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
             <button type="button" class="icon-btn edit" title="Edit room" @click="openEdit(room)">
               <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" /></svg>
             </button>
@@ -218,6 +249,21 @@ function statusBackground(status: string) {
       :room="editingRoom"
       @save="handleSave"
       @cancel="closeForm"
+    />
+
+    <RoomDetailModal
+      v-if="detailRoom"
+      :room="detailRoom"
+      :asset-count="assetCountForRoom(detailRoom.id)"
+      @close="detailRoom = null"
+    />
+
+    <RoomPhotoGalleryModal
+      v-if="galleryRoom"
+      :photos="galleryRoom.photos"
+      :room-name="galleryRoom.name"
+      :initial-index="galleryIndex"
+      @close="galleryRoom = null"
     />
   </div>
 </template>
@@ -308,6 +354,16 @@ function statusBackground(status: string) {
 .room-name { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-badge { flex-shrink: 0; padding: 2px 7px; border-radius: 10px; font-size: 8px; font-weight: 700; white-space: nowrap; }
 
+.card-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: 82px; margin-bottom: 10px; }
+.card-photos.count-1 { grid-template-columns: 1fr; }
+.card-photos.count-2 { grid-template-columns: repeat(2, 1fr); }
+.card-photo { position: relative; min-width: 0; padding: 0; overflow: hidden; background: var(--surface-subtle); border: 0; border-radius: 4px; cursor: pointer; }
+.card-photo img { width: 100%; height: 100%; display: block; object-fit: cover; transition: opacity 150ms; }
+.card-photo:hover img { opacity: 0.86; }
+.card-photo-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px; color: #fff; background: rgba(5, 7, 4, 0.58); font-size: 8px; font-weight: 700; white-space: nowrap; }
+.card-photo-overlay svg { width: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.card-photo-overlay small { font-size: 8px; font-weight: 500; opacity: 0.82; }
+
 .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .meta-item {
   display: flex; align-items: center; gap: 4px;
@@ -348,6 +404,8 @@ function statusBackground(status: string) {
 .icon-btn svg { width: 13px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .icon-btn.edit { color: var(--muted-faint); }
 .icon-btn.edit:hover { background: var(--surface-hover); color: var(--accent); border-color: var(--border-strong); }
+.icon-btn.detail { color: var(--muted-faint); }
+.icon-btn.detail:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-strong); }
 .icon-btn.delete { color: var(--muted-faint); }
 .icon-btn.delete:hover { background: var(--error-surface); color: var(--error); border-color: var(--error-border); }
 

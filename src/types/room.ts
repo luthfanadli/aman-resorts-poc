@@ -2,6 +2,7 @@ export type RoomStatus = 'Active' | 'Inactive' | 'Renovation'
 
 export type RoomType =
   | 'Meeting Room'
+  | 'Guest Room'
   | 'Office'
   | 'Storage'
   | 'Lobby'
@@ -26,7 +27,7 @@ export interface Room {
   capacity: number | null
   status: RoomStatus
   responsibleUnit: string
-  photo: string         // base64 or URL
+  photos: string[]      // base64 or URL
   floorPlan: string     // base64 or polygon string
   notes: string
   createdAt: string     // ISO date

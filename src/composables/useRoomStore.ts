@@ -18,7 +18,15 @@ function now(): string {
 function loadFromStorage(): Room[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as Room[]
+    if (raw) {
+      return (JSON.parse(raw) as Array<Room & { photo?: string }>).map((room) => {
+        const { photo, ...data } = room
+        return {
+          ...data,
+          photos: Array.isArray(room.photos) ? room.photos : photo ? [photo] : [],
+        }
+      })
+    }
   } catch {
     // ignore
   }
@@ -40,7 +48,7 @@ function seedRooms(): Room[] {
       capacity: 80,
       status: 'Active',
       responsibleUnit: 'Front Office',
-      photo: '',
+      photos: [],
       floorPlan: '',
       notes: 'Open 24 hours',
       createdAt: ts,
@@ -58,7 +66,7 @@ function seedRooms(): Room[] {
       capacity: 20,
       status: 'Active',
       responsibleUnit: 'Administration',
-      photo: '',
+      photos: [],
       floorPlan: '',
       notes: 'Projector and whiteboard available',
       createdAt: ts,
@@ -76,7 +84,7 @@ function seedRooms(): Room[] {
       capacity: 5,
       status: 'Active',
       responsibleUnit: 'IT Department',
-      photo: '',
+      photos: [],
       floorPlan: '',
       notes: 'Restricted access — IT staff only',
       createdAt: ts,
@@ -94,7 +102,7 @@ function seedRooms(): Room[] {
       capacity: 60,
       status: 'Active',
       responsibleUnit: 'F&B Department',
-      photo: '',
+      photos: [],
       floorPlan: '',
       notes: 'Open daily 07:00-22:00',
       createdAt: ts,
